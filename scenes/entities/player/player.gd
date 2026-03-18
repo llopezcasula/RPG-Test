@@ -19,12 +19,15 @@ var move_direction: Vector2 = Vector2.ZERO
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
+@onready var hit_box: Area2D = $HitBox
+@onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
 
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
+	set_attack_hitbox_enabled(false)
 	update_animation()
 
 
@@ -81,6 +84,7 @@ func attack() -> void:
 	if state == State.ATTACK:
 		return
 	state = State.ATTACK
+	set_attack_hitbox_enabled(true)
 
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var attack_dir: Vector2 = (mouse_pos - global_position).normalized()
@@ -89,8 +93,14 @@ func attack() -> void:
 	update_animation()
 
 	await get_tree().create_timer(attack_speed).timeout
+	set_attack_hitbox_enabled(false)
 	state = State.IDLE
 	update_animation()
+
+
+func set_attack_hitbox_enabled(enabled: bool) -> void:
+	hit_box.monitoring = enabled
+	hit_box_shape.disabled = not enabled
 
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
