@@ -13,7 +13,9 @@ func take_damage(damage_taken: int) -> void:
 		
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
-	var effects_layer: Node2D = %Effects
-	effects_layer.add_child(death_scene)
-	death_scene.global_position = global_position + Vector2(0.0, -32.0)
+	var effect_parent: Node2D = get_parent() as Node2D
+	if effect_parent == null:
+		effect_parent = %Effects
+	effect_parent.add_child(death_scene)
+	death_scene.global_position = global_position
 	queue_free()
