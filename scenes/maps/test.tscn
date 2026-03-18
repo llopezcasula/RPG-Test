@@ -5,6 +5,9 @@
 
 [node name="Test" type="Node2D" unique_id=89504471]
 
+[node name="GroundEffects" type="Node2D" parent="." unique_id=344363658]
+unique_name_in_owner = true
+
 [node name="Player" parent="." unique_id=2021335828 instance=ExtResource("1_5orm7")]
 
 [node name="Enemy" parent="." unique_id=856571659 instance=ExtResource("2_0jfhv")]

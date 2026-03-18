@@ -13,7 +13,12 @@ func take_damage(damage_taken: int) -> void:
 		
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
-	var effect_parent: Node2D = get_parent() as Node2D
+	var effect_parent: Node2D
+	var current_scene := get_tree().current_scene
+	if current_scene != null:
+		effect_parent = current_scene.get_node_or_null("%GroundEffects") as Node2D
+	if effect_parent == null:
+		effect_parent = get_parent() as Node2D
 	if effect_parent == null:
 		effect_parent = %Effects
 	effect_parent.add_child(death_scene)
