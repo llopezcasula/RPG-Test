@@ -45,6 +45,8 @@ down={
 [layer_names]
 
 2d_physics/layer_1="Enviroment"
+2d_physics/layer_5="enemy_damage"
+2d_physics/layer_6="player_damage"
 
 [rendering]
 

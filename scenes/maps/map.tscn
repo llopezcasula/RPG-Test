@@ -8,6 +8,7 @@
 [ext_resource type="TileSet" uid="uid://57axrqs3jre0" path="res://resources/tilesets/Props.tres" id="7_aewf8"]
 [ext_resource type="TileSet" uid="uid://d37nd15qn24qp" path="res://resources/tilesets/Trees.tres" id="8_lwbun"]
 [ext_resource type="Texture2D" uid="uid://irsjdqw3whoa" path="res://assets/environment/props/clouds/Clouds_01.png" id="10_314gp"]
+[ext_resource type="PackedScene" uid="uid://caxbsm3e3tyth" path="res://scenes/entities/enemies/enemy.tscn" id="10_sl3ds"]
 [ext_resource type="Texture2D" uid="uid://disg1nb86v6dw" path="res://assets/environment/props/clouds/Clouds_02.png" id="11_sl3ds"]
 [ext_resource type="Texture2D" uid="uid://mkdfape8o7vf" path="res://assets/environment/props/clouds/Clouds_03.png" id="12_elicj"]
 [ext_resource type="Texture2D" uid="uid://cpeeb2764qtmr" path="res://assets/environment/props/clouds/Clouds_04.png" id="13_x7wiq"]
@@ -530,6 +531,12 @@ unique_name_in_owner = true
 y_sort_enabled = true
 position = Vector2(-650, -186)
 
+[node name="Enemies" type="Node2D" parent="GroundSortables" unique_id=765540675]
+y_sort_enabled = true
+
+[node name="Enemy" parent="GroundSortables/Enemies" unique_id=1042890364 instance=ExtResource("10_sl3ds")]
+position = Vector2(-326, -205)
+
 [node name="PlateauSortables" type="Node2D" parent="." unique_id=1070193304]
 z_index = 1
 y_sort_enabled = true
@@ -548,3 +555,9 @@ tile_set = ExtResource("8_lwbun")
 z_index = 2
 tile_map_data = PackedByteArray("AADj/xYAAAAAAAAAAADg/xYAAAAAAAAAAADt/zUAAAAAAAAAAADw/zUAAAAAAAAAAADx/9//AAAAAAAAAAATANv/AAAAAAAAAAAwAOz/AAAAAAAAAAA5AAMAAAAAAAAAAAA3AB4AAAAAAAAAAAAsAC8AAAAAAAAAAAAnADEAAAAAAAAAAAAQADYAAAAAAAAAAADf/yYAAAAAAAAAAADh//b/AAAAAAAAAADi//b/AAAAAAAAAAAEAN7/AAAAAAAAAAAhAOP/AAAAAAAAAAA4AA8AAAAAAAAAAAA3AA8AAAAAAAAAAAAuAAoAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_75gw7")
+
+[node name="Effects" type="Node2D" parent="." unique_id=1974834459]
+unique_name_in_owner = true
+z_index = 5
+y_sort_enabled = true
+position = Vector2(1, 0)
