@@ -43,6 +43,8 @@ _data = {
 
 [node name="Death" type="Node2D" unique_id=2104360350]
 script = ExtResource("1_a3gwh")
+z_as_relative = false
+z_index = -1
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=498388982]
 position = Vector2(0, -32)
