@@ -13,6 +13,9 @@ func take_damage(damage_taken: int) -> void:
 		
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
+	death_scene.z_as_relative = false
+	death_scene.z_index = -1
+
 	var effect_parent: Node2D
 	var current_scene := get_tree().current_scene
 	if current_scene != null:
