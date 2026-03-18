@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://b13cah33fnrcn" path="res://scenes/entities/player/player.gd" id="1_635qg"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
-radius = 22.0
+radius = 62.067867
 
 [sub_resource type="Animation" id="Animation_1hmtu"]
 length = 0.001
@@ -192,6 +192,9 @@ hframes = 6
 vframes = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1865334017]
+position = Vector2(-1, -18.999998)
+rotation = 1.5603468
+scale = Vector2(0.30611652, -0.4181699)
 shape = SubResource("CircleShape2D_635qg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=55205245]
