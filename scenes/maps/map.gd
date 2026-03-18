@@ -6,8 +6,10 @@ extends Node2D
 #
 # Manual editor follow-up:
 # - Move tall tree / canopy tiles from `Props` into `Sortables/Trees`.
-# - Keep bushes, rocks, and other low-profile decorations in `Props`.
+# - Move any bushes that should visually cover the player into `Sortables/Trees` too.
+# - Keep only non-occluding ground clutter (small rocks, flowers, flat decals) in `Props`.
 # - Place scene-based tall props (for example instanced trees) under `Sortables/TallProps`.
+# - Make sure `Sortables/Trees` stays visible in the scene.
 #
 # The scene keeps the existing `Player` instance under `Sortables`, and marks it as
 # `unique_name_in_owner` in the scene so `%Player` references remain stable if they are
