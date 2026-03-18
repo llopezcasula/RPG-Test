@@ -19,3 +19,27 @@ Shadow
 Tilemap_color1
 Tilemap_color3
 Water Background color
+
+## Godot 4 map depth-layering template
+
+A reusable map scene template now lives at `scenes/maps/map.tscn` with a helper script at `scenes/maps/map_depth_layers.gd`.
+
+Layering layout:
+- `Water`
+- `FoamRocks`
+- `Ground`
+- `Shadows`
+- `Plateau`
+- `Props`
+- `Trees`
+- `Sortables`
+  - `Player`
+  - `Enemies`
+  - `NPCs`
+
+Notes:
+- Do **not** enable Y Sort on the `Map` root.
+- Only `Sortables` should have `y_sort_enabled = true`.
+- Keep static terrain in the TileMapLayer nodes.
+- Move tall tree/canopy tiles out of `Props` and into `Trees` in the Godot editor if they are already painted into a single layer.
+- If an older map scene still has `Player` directly under `Map`, the helper script reparents it into `Sortables/Player` while preserving transform.
