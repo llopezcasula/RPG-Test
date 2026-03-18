@@ -243,7 +243,7 @@ hframes = 6
 vframes = 8
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1865334017]
-position = Vector2(0, -8)
+position = Vector2(0, 5)
 shape = SubResource("CircleShape2D_635qg")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=55205245]
