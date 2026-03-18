@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://scenes/effects/death.tscn" id="2_pm80n"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
-radius = 11.5
+radius = 15.0
 
 [sub_resource type="Animation" id="Animation_1hmtu"]
 length = 0.001
