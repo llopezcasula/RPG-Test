@@ -77,14 +77,7 @@ func process_wander(delta: float) -> void:
 		enemy.movement_component.decelerate_to_stop(delta)
 		return
 
-	_follow_target(
-		enemy.patrol_move_speed_scale,
-		MODE_WANDER,
-		wander_target,
-		enemy.patrol_arrival_radius,
-		enemy.patrol_slow_radius,
-		false
-	)
+	_follow_target(enemy.patrol_move_speed_scale, MODE_WANDER, wander_target, enemy.patrol_arrival_radius, enemy.patrol_slow_radius)
 
 func _process_return_home(delta: float) -> void:
 	var home_position := _get_home_position()
@@ -104,37 +97,25 @@ func _process_return_home(delta: float) -> void:
 		MODE_RETURN_HOME,
 		home_position,
 		enemy.patrol_arrival_radius,
-		maxf(enemy.patrol_return_slow_radius, enemy.patrol_arrival_radius),
-		true
+		maxf(enemy.patrol_return_slow_radius, enemy.patrol_arrival_radius)
 	)
 
-func _follow_target(
-	speed_scale: float,
-	mode: StringName,
-	target_position: Vector2,
-	arrival_radius: float,
-	slow_radius: float,
-	enable_leash: bool = true
-) -> void:
+func _follow_target(speed_scale: float, mode: StringName, target_position: Vector2, arrival_radius: float, slow_radius: float) -> void:
 	wander_target = target_position
 	current_mode = mode
 	navigation_component._set_navigation_target(target_position)
-	var steering_context := {
+	navigation_component._follow_navigation(speed_scale, {
 		"mode": String(mode),
 		"fallback_target": target_position,
 		"interest_position": target_position,
 		"arrival_radius": arrival_radius,
 		"slow_radius": slow_radius,
+		"leash_center": _get_home_position(),
+		"leash_radius": enemy.patrol_radius,
+		"leash_strength": enemy.patrol_leash_strength,
 		"commit_strength": enemy.steering_commitment_strength,
 		"target_is_active": true
-	}
-
-	if enable_leash:
-		steering_context["leash_center"] = _get_home_position()
-		steering_context["leash_radius"] = enemy.patrol_radius
-		steering_context["leash_strength"] = enemy.patrol_leash_strength
-
-	navigation_component._follow_navigation(speed_scale, steering_context)
+	})
 
 func _should_return_home() -> bool:
 	if not has_wander_origin:
@@ -175,8 +156,11 @@ func _pick_next_wander_target() -> void:
 			if previous_direction != Vector2.ZERO and candidate_direction != Vector2.ZERO:
 				previous_alignment = (candidate_direction.dot(previous_direction) + 1.0) * 0.5
 
-		var distance_score := clampf(candidate_distance / maxf(enemy.patrol_radius, maxf(min_distance, 0.001)), 0.0, 1.0)
-		var score := previous_alignment * enemy.patrol_direction_continuity + distance_score * 3.0
+		var center_bias := 1.0
+		if enemy.patrol_anchor_to_spawn and enemy.patrol_radius > 0.0:
+			center_bias = 1.0 - clampf(navigable_candidate.distance_to(home_position) / enemy.patrol_radius, 0.0, 1.0)
+
+		var score := candidate_distance * 0.65 + previous_alignment * enemy.patrol_direction_continuity + center_bias * 8.0
 		if score > best_score:
 			best_score = score
 			candidate = navigable_candidate
