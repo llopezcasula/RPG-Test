@@ -42,11 +42,13 @@ enum State {
 @export var patrol_snap_distance: float = 16.0
 @export var patrol_leash_strength: float = 1.35
 @export var patrol_point_min_distance: float = 12.0
-@export var patrol_arrival_distance: float = 10.0
-@export var patrol_wander_duration: Vector2 = Vector2(1.25, 2.5)
+@export var patrol_arrival_radius: float = 12.0
+@export var patrol_slow_radius: float = 36.0
+@export var patrol_wander_duration: Vector2 = Vector2(1.5, 3.0)
 @export_range(0.1, 1.0, 0.05) var patrol_move_speed_scale: float = 0.65
-@export var patrol_turn_angle_range: Vector2 = Vector2(35.0, 85.0)
-@export var patrol_radius_step_ratio: float = 0.2
+@export var patrol_target_retry_count: int = 8
+@export var patrol_direction_continuity: float = 6.0
+@export var patrol_anchor_to_spawn: bool = true
 
 # Steering
 @export_category("Steering")
@@ -55,7 +57,13 @@ enum State {
 @export_flags_2d_physics var steering_obstacle_mask: int = 1
 @export var steering_interest_strength: float = 1.0
 @export var steering_danger_strength: float = 1.2
-@export_range(0.0, 1.0, 0.01) var steering_smoothing: float = 0.2
+@export_range(0.0, 1.0, 0.01) var steering_smoothing: float = 0.18
+@export_range(0.0, 1.0, 0.01) var steering_dead_zone: float = 0.04
+@export_range(0.0, 1.0, 0.01) var steering_commitment_strength: float = 0.55
+@export_range(0.0, 1.0, 0.01) var steering_chase_commitment_strength: float = 0.25
+@export_range(0.0, 1.0, 0.01) var steering_inertia_weight: float = 0.65
+@export var steering_interest_curve: float = 1.6
+@export var steering_commitment_curve: float = 1.4
 
 # Debug
 @export_category("Debug")
@@ -71,12 +79,6 @@ enum State {
 var state: State = State.IDLE
 var spawn_position: Vector2
 var facing_direction: Vector2 = Vector2.DOWN
-var patrol_target: Vector2
-var patrol_wait_time: float = 0.0
-var patrol_goal_time_remaining: float = 0.0
-var patrol_angle: float = 0.0
-var patrol_orbit_radius: float = 0.0
-var patrol_direction_sign: float = 1.0
 var attack_cooldown_remaining: float = 0.0
 var aggro_locked: bool = false
 var current_target: CharacterBody2D
@@ -98,6 +100,7 @@ var safe_navigation_velocity: Vector2 = Vector2.ZERO
 @onready var ai_component: EnemyAIComponent = $EnemyAIComponent
 @onready var navigation_component: EnemyNavigationComponent = $EnemyNavigationComponent
 @onready var steering_component: EnemySteeringComponent = $EnemySteeringComponent
+@onready var wander_component: EnemyWanderComponent = $EnemyWanderComponent
 @onready var attack_component: EnemyAttackComponent = $EnemyAttackComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
@@ -111,9 +114,10 @@ func _ready() -> void:
 	animation_tree.active = true
 	rng.randomize()
 
-	ai_component.setup(self, movement_component, navigation_component)
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
+	wander_component.setup(self, navigation_component)
+	ai_component.setup(self, movement_component, navigation_component, wander_component)
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
 
 	hitbox_base_position = hit_box.position
@@ -122,11 +126,7 @@ func _ready() -> void:
 	attack_component.set_attack_hitbox_enabled(false)
 	navigation_component._configure_navigation_agent()
 	spawn_position = global_position
-	patrol_angle = rng.randf_range(0.0, TAU)
-	patrol_orbit_radius = clampf(patrol_radius * rng.randf_range(0.45, 0.9), patrol_point_min_distance, patrol_radius)
-	patrol_direction_sign = -1.0 if rng.randf() < 0.5 else 1.0
-	patrol_goal_time_remaining = 0.0
-	patrol_target = spawn_position
+	wander_component.set_wander_origin(spawn_position)
 	navigation_target_position = spawn_position
 	update_animation()
 	ai_component._resolve_target()
