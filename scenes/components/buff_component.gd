@@ -4,7 +4,7 @@ class_name BuffComponent
 signal buff_applied(source_id: StringName, modifier: StatModifier)
 signal buff_expired(source_id: StringName, modifier: StatModifier)
 
-@export_node_path("StatsComponent") var stats_component_path: NodePath = ^"../StatsComponent"
+@export_node_path("Node") var stats_component_path: NodePath = ^"../StatsComponent"
 
 var _active_buffs: Array[Dictionary] = []
 

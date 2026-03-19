@@ -11,7 +11,7 @@ signal died
 @export var fallback_max_health: float = 100.0
 @export var start_at_max_health: bool = true
 @export var current_health: float = 100.0
-@export_node_path("StatsComponent") var stats_component_path: NodePath
+@export_node_path("Node") var stats_component_path: NodePath
 
 var max_health: float = 100.0
 

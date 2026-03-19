@@ -17,8 +17,8 @@ signal damage_received(source: Node, raw_damage: float, final_damage: float)
 @export var fallback_crit_chance: float = 0.0
 @export var fallback_crit_damage: float = 1.5
 @export var fallback_damage_multiplier: float = 1.0
-@export_node_path("StatsComponent") var stats_component_path: NodePath = ^"../StatsComponent"
-@export_node_path("HealthComponent") var health_component_path: NodePath = ^"../StatsComponent/HealthComponent"
+@export_node_path("Node") var stats_component_path: NodePath = ^"../StatsComponent"
+@export_node_path("Node") var health_component_path: NodePath = ^"../StatsComponent/HealthComponent"
 
 @onready var stats_component: StatsComponent = _resolve_stats_component()
 @onready var health_component: HealthComponent = _resolve_health_component()

@@ -14,7 +14,7 @@ class_name MovementComponent
 @export var up_action: StringName = &"up"
 @export var down_action: StringName = &"down"
 @export_node_path("CharacterBody2D") var body_path: NodePath
-@export_node_path("StatsComponent") var stats_component_path: NodePath = ^"../StatsComponent"
+@export_node_path("Node") var stats_component_path: NodePath = ^"../StatsComponent"
 
 var move_direction: Vector2 = Vector2.ZERO
 
