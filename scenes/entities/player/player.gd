@@ -59,10 +59,6 @@ func _physics_process(delta: float) -> void:
 
 	movement_loop(delta)
 
-func _process(_delta: float) -> void:
-	if state == State.ATTACK:
-		sync_attack_hitbox_transform()
-
 func movement_loop(delta: float) -> void:
 	move_direction = Input.get_vector("left", "right", "up", "down")
 

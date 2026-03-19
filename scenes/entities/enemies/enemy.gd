@@ -1,7 +1,7 @@
 extends CharacterBody2D
 
 @export_category("Stats")
-@export var hitpoints:int = 100
+@export var hitpoints:int = 180
 
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
