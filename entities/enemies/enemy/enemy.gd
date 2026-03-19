@@ -119,12 +119,12 @@ func _ready() -> void:
 	rng.randomize()
 
 	spawn_position = global_position
-	navigation_target_position = spawn_position
+	navigation_target_position = global_position
 
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
 	wander_component.setup(self, navigation_component)
-	wander_component.set_wander_origin(spawn_position)
+	wander_component.set_wander_origin(global_position)
 	ai_component.setup(self, movement_component, navigation_component, wander_component)
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
 
