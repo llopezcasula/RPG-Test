@@ -1,15 +1,19 @@
 extends CharacterBody2D
 
-@export_category("Stats")
-@export var hitpoints:int = 180
-
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
 
+@onready var health_component: HealthComponent = $HealthComponent
+
+func _ready() -> void:
+	if health_component != null:
+		health_component.died.connect(_on_health_component_died)
+
 func take_damage(damage_taken: int) -> void:
-	hitpoints -= damage_taken
-	if hitpoints <= 0:
-		death()
+	if health_component == null:
+		return
+
+	health_component.take_damage(damage_taken)
 
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
@@ -23,3 +27,6 @@ func death() -> void:
 		death_scene.global_position = global_position
 
 	queue_free()
+
+func _on_health_component_died() -> void:
+	death()

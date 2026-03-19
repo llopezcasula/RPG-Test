@@ -8,19 +8,16 @@ enum State {
 }
 
 @export_category("Stats")
-@export var speed: float = 260.0
-@export var acceleration: float = 1800.0
-@export var deceleration: float = 2200.0
 @export var attack_speed: float = 0.6
 @export var attack_damage: int = 60
 @export var debug_hitbox: bool = true
 
 var state: State = State.IDLE
-var move_direction: Vector2 = Vector2.ZERO
 var hitbox_base_position: Vector2
 var hitbox_base_rotation: float
 var hitbox_base_scale: Vector2
 
+@onready var movement_component: MovementComponent = $MovementComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
@@ -51,19 +48,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.ATTACK:
-		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
-		move_and_slide()
+		movement_component.decelerate_to_stop(delta)
 		return
 
-	movement_loop(delta)
+	movement_component.physics_update(delta)
+	update_movement_state()
 
-func movement_loop(delta: float) -> void:
-	move_direction = Input.get_vector("left", "right", "up", "down")
-
-	var target_velocity: Vector2 = move_direction * speed
-	var rate: float = acceleration if move_direction != Vector2.ZERO else deceleration
-	velocity = velocity.move_toward(target_velocity, rate * delta)
-	move_and_slide()
+func update_movement_state() -> void:
+	var move_direction: Vector2 = movement_component.get_move_direction()
 
 	if state == State.IDLE or state == State.RUN:
 		if move_direction.x < -0.01:
@@ -125,7 +117,6 @@ func attack() -> void:
 
 	state = State.IDLE
 	update_animation()
-
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
