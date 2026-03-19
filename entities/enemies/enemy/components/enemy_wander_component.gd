@@ -18,7 +18,9 @@ var current_mode: StringName = MODE_WANDER
 func setup(owner_enemy: Enemy, owner_navigation_component: EnemyNavigationComponent) -> void:
 	enemy = owner_enemy
 	navigation_component = owner_navigation_component
-	set_wander_origin(enemy.global_position)
+	has_wander_origin = false
+	wander_origin = enemy.global_position
+	wander_target = enemy.global_position
 	reset()
 
 func set_wander_origin(origin: Vector2) -> void:
@@ -29,7 +31,9 @@ func set_wander_origin(origin: Vector2) -> void:
 
 func reset() -> void:
 	has_wander_target = false
-	wander_target = _get_home_position()
+	wander_target = enemy.global_position if enemy != null else Vector2.ZERO
+	if has_wander_origin:
+		wander_target = wander_origin
 	wait_time_remaining = 0.0
 	repick_time_remaining = 0.0
 	current_mode = MODE_WANDER
