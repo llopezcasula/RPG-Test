@@ -83,9 +83,9 @@ func _process_patrol(delta: float) -> void:
 	navigation_component._follow_navigation()
 
 func _pick_next_patrol_target() -> void:
-	var angle := enemy.rng.randf_range(0.0, TAU)
-	var distance := enemy.rng.randf_range(12.0, enemy.patrol_radius)
-	var requested_patrol_target := enemy.spawn_position + Vector2.RIGHT.rotated(angle) * distance
+	var angle: float = enemy.rng.randf_range(0.0, TAU)
+	var distance: float = enemy.rng.randf_range(12.0, enemy.patrol_radius)
+	var requested_patrol_target: Vector2 = enemy.spawn_position + Vector2.RIGHT.rotated(angle) * distance
 	enemy.patrol_target = navigation_component._get_closest_navigation_point(requested_patrol_target)
 	if enemy.patrol_target.distance_to(enemy.global_position) <= enemy.patrol_snap_distance:
 		enemy.patrol_target = enemy.spawn_position
