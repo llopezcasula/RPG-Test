@@ -18,7 +18,7 @@ func _can_chase_target() -> bool:
 		enemy.aggro_locked = false
 		return false
 
-	var distance_to_target := enemy.global_position.distance_to(enemy.current_target.global_position)
+	var distance_to_target: float = enemy.global_position.distance_to(enemy.current_target.global_position)
 	if distance_to_target <= enemy.detection_radius:
 		enemy.aggro_locked = true
 
@@ -33,13 +33,13 @@ func _process_chase(delta: float) -> void:
 		navigation_component._stop_navigation()
 		return
 
-	var to_target := enemy.current_target.global_position - enemy.global_position
-	var distance_to_target := to_target.length()
+	var to_target: Vector2 = enemy.current_target.global_position - enemy.global_position
+	var distance_to_target: float = to_target.length()
 	if distance_to_target <= 0.001:
 		navigation_component._stop_navigation()
 		return
 
-	var direction := to_target / distance_to_target
+	var direction: Vector2 = to_target / distance_to_target
 	enemy._update_facing(direction)
 
 	if distance_to_target <= enemy.attack_range:
@@ -60,7 +60,7 @@ func _process_chase(delta: float) -> void:
 	# chase and how aggressively to approach the current target.
 	var desired_speed_scale := 1.0
 	if enemy.attack_slowdown_distance > 0.0:
-		var slowdown_distance := enemy.attack_range + enemy.attack_slowdown_distance
+		var slowdown_distance: float = enemy.attack_range + enemy.attack_slowdown_distance
 		if distance_to_target < slowdown_distance:
 			desired_speed_scale = clampf((distance_to_target - enemy.attack_range) / enemy.attack_slowdown_distance, 0.35, 1.0)
 
