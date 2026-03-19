@@ -109,8 +109,8 @@ func _follow_directly(target_position: Vector2, steering_context: Dictionary = {
 	var desired_direction := to_target.normalized()
 	if steering_component != null:
 		desired_direction = steering_component.get_steering_direction(target_position, steering_context)
-		if desired_direction == Vector2.ZERO:
-			desired_direction = Vector2.ZERO if float(steering_context.get("arrival_radius", 0.0)) > 0.0 else to_target.normalized()
+		if desired_direction == Vector2.ZERO and to_target.length_squared() > 0.01:
+			desired_direction = to_target.normalized()
 
 	var desired_velocity: Vector2 = desired_direction * navigation_agent.max_speed
 	_apply_navigation_velocity(desired_velocity)

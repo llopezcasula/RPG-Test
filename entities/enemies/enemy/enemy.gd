@@ -82,7 +82,6 @@ enum State {
 # Runtime state
 var state: State = State.IDLE
 var spawn_position: Vector2
-var spawn_position_space: Node2D
 var facing_direction: Vector2 = Vector2.DOWN
 var attack_cooldown_remaining: float = 0.0
 var aggro_locked: bool = false
@@ -119,14 +118,13 @@ func _ready() -> void:
 	animation_tree.active = true
 	rng.randomize()
 
-	spawn_position_space = _resolve_spawn_position_space()
-	spawn_position = _get_position_in_space(spawn_position_space)
-	navigation_target_position = _get_spawn_global_position()
+	spawn_position = global_position
+	navigation_target_position = spawn_position
 
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
 	wander_component.setup(self, navigation_component)
-	wander_component.set_wander_origin(spawn_position, spawn_position_space)
+	wander_component.set_wander_origin(spawn_position)
 	ai_component.setup(self, movement_component, navigation_component, wander_component)
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
 
@@ -201,23 +199,6 @@ func _clear_navigation_motion() -> void:
 	movement_component.set_move_direction(Vector2.ZERO)
 	navigation_agent.velocity = Vector2.ZERO
 	safe_navigation_velocity = Vector2.ZERO
-
-func _resolve_spawn_position_space() -> Node2D:
-	if owner is Node2D:
-		return owner as Node2D
-	if get_parent() is Node2D:
-		return get_parent() as Node2D
-	return null
-
-func _get_position_in_space(space: Node2D) -> Vector2:
-	if space != null and is_instance_valid(space):
-		return space.to_local(global_position)
-	return global_position
-
-func _get_spawn_global_position() -> Vector2:
-	if spawn_position_space != null and is_instance_valid(spawn_position_space):
-		return spawn_position_space.to_global(spawn_position)
-	return spawn_position
 
 func _update_facing(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
