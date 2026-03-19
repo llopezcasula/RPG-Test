@@ -8,6 +8,9 @@ enum State {
 }
 
 @export_category("Stats")
+@export var speed: float = 260.0
+@export var acceleration: float = 1800.0
+@export var deceleration: float = 2200.0
 @export var attack_speed: float = 0.6
 @export var attack_damage: int = 60
 @export var debug_hitbox: bool = true
@@ -23,7 +26,6 @@ var hitbox_base_scale: Vector2
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var hit_box: Area2D = $HitBox
 @onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
-@onready var movement_component: MovementComponent = $MovementComponent
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
@@ -49,14 +51,19 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.ATTACK:
-		movement_component.stop_body(self, delta)
+		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
+		move_and_slide()
 		return
 
 	movement_loop(delta)
 
 func movement_loop(delta: float) -> void:
-	move_direction = movement_component.get_input_direction()
-	movement_component.move_body(self, delta, move_direction)
+	move_direction = Input.get_vector("left", "right", "up", "down")
+
+	var target_velocity: Vector2 = move_direction * speed
+	var rate: float = acceleration if move_direction != Vector2.ZERO else deceleration
+	velocity = velocity.move_toward(target_velocity, rate * delta)
+	move_and_slide()
 
 	if state == State.IDLE or state == State.RUN:
 		if move_direction.x < -0.01:
@@ -68,7 +75,8 @@ func movement_loop(delta: float) -> void:
 		if state != State.RUN:
 			state = State.RUN
 			update_animation()
-	elif velocity == Vector2.ZERO:
+	elif velocity.length_squared() < 1.0:
+		velocity = Vector2.ZERO
 		if state != State.IDLE:
 			state = State.IDLE
 			update_animation()

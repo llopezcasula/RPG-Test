@@ -2,7 +2,6 @@
 
 [ext_resource type="Texture2D" uid="uid://dd14yvscw8gcd" path="res://assets/sprites/player/Warrior_Blue.png" id="1_1hmtu"]
 [ext_resource type="Script" uid="uid://b13cah33fnrcn" path="res://scenes/entities/player/player.gd" id="1_635qg"]
-[ext_resource type="Script" path="res://scenes/components/movement_component.gd" id="2_movement"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
@@ -326,15 +325,6 @@ size = Vector2(10, 46)
 
 [node name="Player" type="CharacterBody2D" unique_id=2021335828]
 script = ExtResource("1_635qg")
-<<<<<<< HEAD
-=======
-attack_speed = null
-attack_damage = null
->>>>>>> 527286fdcc0d3d5ba06750b60164728c2c40276b
-
-
-[node name="MovementComponent" type="Node" parent="." unique_id=908177001]
-script = ExtResource("2_movement")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)
