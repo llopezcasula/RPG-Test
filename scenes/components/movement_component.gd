@@ -2,11 +2,9 @@ extends Node
 class_name MovementComponent
 
 @export_category("Movement")
-# These ids let the component read movement tuning from StatsComponent.
-# If a stat is missing, the fallback value is used instead.
-@export var move_speed_stat_id: StringName = &"move_speed"
-@export var acceleration_stat_id: StringName = &"acceleration"
-@export var deceleration_stat_id: StringName = &"deceleration"
+@export var move_speed_stat_id: StringName = StatsIds.MOVE_SPEED
+@export var acceleration_stat_id: StringName = StatsIds.ACCELERATION
+@export var deceleration_stat_id: StringName = StatsIds.DECELERATION
 @export var speed: float = 260.0
 @export var acceleration: float = 1800.0
 @export var deceleration: float = 2200.0
@@ -16,7 +14,7 @@ class_name MovementComponent
 @export var up_action: StringName = &"up"
 @export var down_action: StringName = &"down"
 @export_node_path("CharacterBody2D") var body_path: NodePath
-@export_node_path("StatsComponent") var stats_component_path: NodePath = ^"../StatsComponent"
+@export_node_path("Node") var stats_component_path: NodePath = ^"../StatsComponent"
 
 var move_direction: Vector2 = Vector2.ZERO
 

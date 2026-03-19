@@ -7,13 +7,11 @@ signal healed(amount: float, current_health: float, max_health: float)
 signal died
 
 @export_category("Health")
-# The stat id can stay the same across all entities. Only the value changes per entity.
-@export var max_health_stat_id: StringName = &"max_health"
-# Used only if the entity does not define the stat.
+@export var max_health_stat_id: StringName = StatsIds.MAX_HEALTH
 @export var fallback_max_health: float = 100.0
 @export var start_at_max_health: bool = true
 @export var current_health: float = 100.0
-@export_node_path("StatsComponent") var stats_component_path: NodePath
+@export_node_path("Node") var stats_component_path: NodePath
 
 var max_health: float = 100.0
 
@@ -45,25 +43,27 @@ func refresh_max_health_from_stats() -> void:
 
 func take_damage(amount: float) -> float:
 	if amount <= 0.0 or is_dead():
-		return current_health
+		return 0.0
 
+	var applied_damage := minf(amount, current_health)
 	current_health = maxf(current_health - amount, 0.0)
-	damaged.emit(amount, current_health, max_health)
+	damaged.emit(applied_damage, current_health, max_health)
 	health_changed.emit(current_health, max_health)
 
 	if is_dead():
 		died.emit()
 
-	return current_health
+	return applied_damage
 
 func heal(amount: float) -> float:
 	if amount <= 0.0 or is_dead():
-		return current_health
+		return 0.0
 
+	var applied_healing := minf(amount, max_health - current_health)
 	current_health = minf(current_health + amount, max_health)
-	healed.emit(amount, current_health, max_health)
+	healed.emit(applied_healing, current_health, max_health)
 	health_changed.emit(current_health, max_health)
-	return current_health
+	return applied_healing
 
 func reset_health() -> void:
 	refresh_max_health_from_stats()
