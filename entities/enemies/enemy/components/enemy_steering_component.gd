@@ -79,27 +79,6 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 	var previous_direction: Vector2 = last_steering.normalized() if last_steering.length_squared() > 0.0001 else target_direction
 	var commit_strength: float = clampf(float(context.get("commit_strength", enemy.steering_commitment_strength)), 0.0, 1.0)
 
-	# Edge bias: when the enemy is near the outer part of the patrol circle,
-	# reduce the interest score of directions that point further outward.
-	# This is pure context steering — we tilt the weights, not apply a force.
-	# edge_t is 0 when well inside the patrol area, 1 at and beyond the boundary.
-	var patrol_home: Vector2 = context.get("patrol_home", enemy.global_position)
-	var patrol_radius: float = float(context.get("patrol_radius", 0.0))
-	var edge_bias_start: float = clampf(float(context.get("patrol_edge_bias_start", 0.65)), 0.0, 1.0)
-	var edge_bias_strength: float = maxf(float(context.get("patrol_edge_bias_strength", 0.0)), 0.0)
-	var has_patrol_area: bool = patrol_radius > 0.001 and edge_bias_strength > 0.001
-
-	var edge_t: float = 0.0
-	var outward_dir: Vector2 = Vector2.ZERO
-	if has_patrol_area:
-		var to_home: Vector2 = patrol_home - enemy.global_position
-		var dist_from_home: float = to_home.length()
-		outward_dir = -to_home / dist_from_home if dist_from_home > 0.001 else Vector2.ZERO
-		var inner_edge: float = patrol_radius * edge_bias_start
-		var outer_edge: float = patrol_radius
-		if dist_from_home > inner_edge:
-			edge_t = clampf((dist_from_home - inner_edge) / maxf(outer_edge - inner_edge, 0.001), 0.0, 1.0)
-
 	for i in sample_directions.size():
 		var direction: Vector2 = sample_directions[i]
 		var target_alignment := remap(clampf(direction.dot(target_direction), -1.0, 1.0), -1.0, 1.0, 0.0, 1.0)
@@ -110,13 +89,6 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 
 		var score := lerpf(target_alignment, continuity_alignment, commit_strength * enemy.steering_inertia_weight)
 
-		# Near the patrol boundary, scale down interest for directions that point
-		# further outward. outward_dot is 0 for inward/perpendicular directions
-		# and 1 for the direction directly away from home — only those get penalised.
-		if edge_t > 0.0 and outward_dir != Vector2.ZERO:
-			var outward_dot: float = maxf(direction.dot(outward_dir), 0.0)
-			score *= 1.0 - outward_dot * edge_t * edge_bias_strength
-
 		interest[i] = clampf(score, 0.0, 1.0)
 
 	return interest
@@ -124,24 +96,6 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 	var danger := _make_empty_weights()
 	var space_state := enemy.get_world_2d().direct_space_state
-
-	# When the enemy has genuinely left the patrol area, mark directions pointing
-	# further outward as dangerous so the wander target picker and return-home
-	# logic can overcome them cleanly. No effect at all while inside the radius.
-	var patrol_home: Vector2 = context.get("patrol_home", enemy.global_position)
-	var patrol_radius: float = float(context.get("patrol_radius", 0.0))
-	var edge_bias_strength: float = maxf(float(context.get("patrol_edge_bias_strength", 0.0)), 0.0)
-	var has_patrol_area: bool = patrol_radius > 0.001 and edge_bias_strength > 0.001
-
-	var outside_t: float = 0.0
-	var outward_dir: Vector2 = Vector2.ZERO
-	if has_patrol_area:
-		var to_home: Vector2 = patrol_home - enemy.global_position
-		var dist_from_home: float = to_home.length()
-		outward_dir = -to_home / dist_from_home if dist_from_home > 0.001 else Vector2.ZERO
-		if dist_from_home > patrol_radius:
-			# Rises from 0 at the boundary to 1 at 2x the patrol radius.
-			outside_t = clampf((dist_from_home - patrol_radius) / maxf(patrol_radius, 0.001), 0.0, 1.0)
 
 	for i in sample_directions.size():
 		var direction: Vector2 = sample_directions[i]
@@ -158,12 +112,6 @@ func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 			var hit_position: Vector2 = hit["position"]
 			var distance_ratio := enemy.global_position.distance_to(hit_position) / maxf(enemy.steering_obstacle_check_distance, 0.001)
 			score = maxf(score, 1.0 - clampf(distance_ratio, 0.0, 1.0))
-
-		# Outside the patrol radius: outward directions become dangerous.
-		# This is zero inside the radius — purely an out-of-bounds correction.
-		if outside_t > 0.0 and outward_dir != Vector2.ZERO:
-			var outward_dot: float = maxf(direction.dot(outward_dir), 0.0)
-			score = maxf(score, outward_dot * outside_t * edge_bias_strength)
 
 		danger[i] = clampf(score, 0.0, 1.0)
 
