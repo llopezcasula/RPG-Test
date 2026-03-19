@@ -90,6 +90,13 @@ func process_wander(delta: float) -> void:
 func _follow_target(speed_scale: float, target_position: Vector2, arrival_radius: float, slow_radius: float, target_mode: StringName = MODE_WANDER) -> void:
 	wander_target = target_position
 	current_mode = target_mode
+
+	var interest_weight := enemy.steering_patrol_interest_scale
+	var danger_weight := enemy.steering_patrol_danger_scale
+	if target_mode == MODE_RETURN:
+		interest_weight = enemy.steering_return_interest_scale
+		danger_weight = enemy.steering_return_danger_scale
+
 	navigation_component._set_navigation_target(target_position)
 	navigation_component._follow_navigation(speed_scale, {
 		"mode": String(target_mode),
@@ -98,6 +105,8 @@ func _follow_target(speed_scale: float, target_position: Vector2, arrival_radius
 		"arrival_radius": arrival_radius,
 		"slow_radius": slow_radius,
 		"commit_strength": enemy.steering_commitment_strength,
+		"interest_weight": interest_weight,
+		"danger_weight": danger_weight,
 		"target_is_active": true
 	})
 

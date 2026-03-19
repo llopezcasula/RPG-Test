@@ -75,7 +75,9 @@ func _process_chase(delta: float) -> void:
 		"mode": "chase",
 		"fallback_target": enemy.current_target.global_position,
 		"interest_position": enemy.current_target.global_position,
-		"commit_strength": enemy.steering_chase_commitment_strength
+		"commit_strength": enemy.steering_chase_commitment_strength,
+		"interest_weight": enemy.steering_chase_interest_scale,
+		"danger_weight": enemy.steering_chase_danger_scale
 	})
 
 func _process_patrol(delta: float) -> void:
