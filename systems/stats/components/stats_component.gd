@@ -13,6 +13,9 @@ signal modifier_removed(stat_id: StringName, modifier: StatModifier)
 var _stats_by_id: Dictionary[StringName, Stat] = {}
 
 func _enter_tree() -> void:
+	# `stats_source` is an optional data container for reusable default stat sets.
+	# If it is assigned, duplicate the source data so each component instance owns
+	# its runtime stat resources independently.
 	if stats_source != null:
 		stats = stats_source.build_stats()
 	_rebuild_cache()
