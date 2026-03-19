@@ -7,6 +7,9 @@ enum State {
 	DEAD
 }
 
+@export_category("Related Scenes")
+@export var death_packed: PackedScene
+
 @export_category("Combat")
 @export var debug_hitbox: bool = true
 
@@ -21,6 +24,7 @@ var hitbox_base_scale: Vector2
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var hit_box: Area2D = $HitBox
 @onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
 
@@ -147,6 +151,19 @@ func get_health_component() -> HealthComponent:
 		return null
 	return stats_component.get_node_or_null("HealthComponent") as HealthComponent
 
+func death() -> void:
+	if death_packed == null:
+		return
+
+	var death_scene: Node2D = death_packed.instantiate()
+	var effect_parent := %Effects as Node2D
+	if effect_parent == null:
+		effect_parent = get_parent() as Node2D
+
+	if effect_parent != null:
+		effect_parent.add_child(death_scene)
+		death_scene.global_position = global_position
+
 func get_attack_speed() -> float:
 	if combat_component == null:
 		return 0.6
@@ -161,6 +178,9 @@ func _on_health_component_died() -> void:
 	movement_component.stop_immediately()
 	set_attack_hitbox_enabled(false)
 	velocity = Vector2.ZERO
+	collision_shape.disabled = true
+	sprite.visible = false
+	death()
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
 	if combat_component == null:
