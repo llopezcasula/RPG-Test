@@ -1,142 +1,119 @@
 extends Node
 class_name EnemyAIComponent
 
-const WANDER_ARRIVAL_RADIUS := 10.0
-const WANDER_MIN_DISTANCE := 50.0
-const WANDER_MAX_DISTANCE := 120.0
-const WANDER_MIN_REPICK_TIME := 1.0
-const WANDER_MAX_REPICK_TIME := 3.0
-const WANDER_MIN_PAUSE_TIME := 0.5
-const WANDER_MAX_PAUSE_TIME := 1.5
-const WANDER_DIRECTION_JITTER := 0.35
-const WANDER_SPEED_SCALE := 0.45
-
 var enemy: Enemy
-var movement_component: MovementComponent
 var navigation_component: EnemyNavigationComponent
-var wander_target: Vector2 = Vector2.ZERO
-var wander_timer: float = 0.0
+var attack_component: EnemyAttackComponent
+var current_target: CharacterBody2D
+var repath_timer: float = 0.0
 
-func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent) -> void:
+func setup(owner_enemy: Enemy, owner_navigation_component: EnemyNavigationComponent, owner_attack_component: EnemyAttackComponent) -> void:
 	enemy = owner_enemy
-	movement_component = owner_movement_component
 	navigation_component = owner_navigation_component
-	_reset_wander()
+	attack_component = owner_attack_component
 
-func _resolve_target() -> void:
-	enemy.current_target = enemy.get_tree().get_first_node_in_group(enemy.player_group) as CharacterBody2D
+func physics_update(delta: float) -> void:
+	if enemy == null:
+		return
 
-func _can_chase_target() -> bool:
-	if enemy.current_target == null or not is_instance_valid(enemy.current_target):
-		enemy.aggro_locked = false
-		return false
+	current_target = resolve_target()
+	enemy.current_target = current_target
 
-	var distance_to_target: float = enemy.global_position.distance_to(enemy.current_target.global_position)
-	if distance_to_target <= enemy.detection_radius:
-		enemy.aggro_locked = true
+	match enemy.state:
+		enemy.State.IDLE:
+			_process_idle(delta)
+		enemy.State.CHASE:
+			_process_chase(delta)
+		enemy.State.ATTACK:
+			_process_attack(delta)
+		enemy.State.DEAD:
+			navigation_component.stop()
 
-	if enemy.aggro_locked and distance_to_target <= enemy.disengage_radius:
-		return true
+func resolve_target() -> CharacterBody2D:
+	var player := enemy.get_tree().get_first_node_in_group(enemy.player_group) as CharacterBody2D
+	if player == null or not is_instance_valid(player):
+		return null
+	return player
 
-	enemy.aggro_locked = false
-	return false
+func _process_idle(delta: float) -> void:
+	navigation_component.stop()
+	if _should_chase_target():
+		enemy.set_state(enemy.State.CHASE)
+		_process_chase(delta)
+
+# Future extension point for patrol / wander behavior.
+func _process_patrol(_delta: float) -> void:
+	navigation_component.stop()
 
 func _process_chase(delta: float) -> void:
-	_reset_wander()
-
-	if enemy.current_target == null:
-		navigation_component._stop_navigation()
+	if not _should_chase_target():
+		enemy.set_state(enemy.State.IDLE)
+		navigation_component.stop()
 		return
 
-	var to_target: Vector2 = enemy.current_target.global_position - enemy.global_position
-	var distance_to_target: float = to_target.length()
-	if distance_to_target <= 0.001:
-		navigation_component._stop_navigation()
-		return
-
-	var direction: Vector2 = to_target / distance_to_target
-	enemy._update_facing(direction)
+	var distance_to_target := enemy.global_position.distance_to(current_target.global_position)
+	var target_direction := (current_target.global_position - enemy.global_position).normalized()
+	if target_direction != Vector2.ZERO:
+		enemy.update_facing(target_direction)
 
 	if distance_to_target <= enemy.attack_range:
-		navigation_component._stop_navigation()
-		movement_component.decelerate_to_stop(delta)
-		if enemy.attack_cooldown_remaining <= 0.0 and enemy.state != enemy.State.ATTACK:
-			enemy.attack_component._start_attack(direction)
+		navigation_component.stop()
+		_start_attack_if_possible()
 		return
 
-	if enemy.state == enemy.State.ATTACK:
-		navigation_component._stop_navigation()
-		movement_component.decelerate_to_stop(delta)
+	enemy.set_state(enemy.State.CHASE)
+	repath_timer = maxf(repath_timer - delta, 0.0)
+	if repath_timer <= 0.0:
+		navigation_component.set_target_position(current_target.global_position)
+		repath_timer = enemy.repath_interval
+
+	navigation_component.move_to_target(delta)
+
+func _process_attack(delta: float) -> void:
+	navigation_component.stop()
+	if attack_component.is_attacking():
 		return
 
-	navigation_component._set_navigation_target(enemy.current_target.global_position)
-
-	var desired_speed_scale: float = enemy.chase_move_speed_scale
-	if enemy.attack_slowdown_distance > 0.0:
-		var slowdown_distance: float = enemy.attack_range + enemy.attack_slowdown_distance
-		if distance_to_target < slowdown_distance:
-			var attack_slowdown_ratio := clampf((distance_to_target - enemy.attack_range) / enemy.attack_slowdown_distance, 0.35, 1.0)
-			desired_speed_scale *= attack_slowdown_ratio
-
-	navigation_component._follow_navigation(desired_speed_scale, {
-		"mode": "chase",
-		"interest_position": enemy.current_target.global_position,
-		"commit_strength": enemy.steering_chase_commitment_strength
-	})
-
-func _process_patrol(delta: float) -> void:
-	if enemy.state == enemy.State.ATTACK:
-		navigation_component._stop_navigation()
-		movement_component.decelerate_to_stop(delta)
+	if not _has_target():
+		enemy.set_state(enemy.State.IDLE)
 		return
 
-	wander_timer = maxf(wander_timer - delta, 0.0)
-
-	var distance_to_target := enemy.global_position.distance_to(wander_target)
-	if distance_to_target <= WANDER_ARRIVAL_RADIUS:
-		var was_moving := enemy.has_navigation_target
-		navigation_component._stop_navigation()
-		movement_component.decelerate_to_stop(delta)
-		if wander_timer <= 0.0:
-			_pick_next_wander_target(was_moving)
+	var distance_to_target := enemy.global_position.distance_to(current_target.global_position)
+	if distance_to_target > enemy.disengage_radius:
+		enemy.set_state(enemy.State.IDLE)
 		return
 
-	if wander_timer <= 0.0:
-		_pick_next_wander_target(false)
-
-	navigation_component._set_navigation_target(wander_target)
-	navigation_component._follow_navigation(WANDER_SPEED_SCALE, {
-		"mode": "wander",
-		"interest_position": wander_target
-	})
-
-func _pick_next_wander_target(wait_before_move: bool) -> void:
-	if enemy == null or navigation_component == null:
+	if distance_to_target <= enemy.attack_range and enemy.can_attack():
+		_start_attack_if_possible()
 		return
 
-	if wait_before_move:
-		wander_target = enemy.global_position
-		wander_timer = enemy.rng.randf_range(WANDER_MIN_PAUSE_TIME, WANDER_MAX_PAUSE_TIME)
+	if distance_to_target <= enemy.detection_radius:
+		enemy.set_state(enemy.State.CHASE)
+		_process_chase(delta)
 		return
 
-	var base_direction := enemy.facing_direction.normalized()
-	if base_direction == Vector2.ZERO:
-		base_direction = Vector2.RIGHT.rotated(enemy.rng.randf_range(0.0, TAU))
+	enemy.set_state(enemy.State.IDLE)
 
-	var jittered_direction := base_direction.rotated(enemy.rng.randf_range(-WANDER_DIRECTION_JITTER, WANDER_DIRECTION_JITTER))
-	var random_direction := jittered_direction.normalized()
-	if random_direction == Vector2.ZERO:
-		random_direction = Vector2.RIGHT.rotated(enemy.rng.randf_range(0.0, TAU))
+func _start_attack_if_possible() -> void:
+	if not _has_target():
+		enemy.set_state(enemy.State.IDLE)
+		return
 
-	var random_distance := enemy.rng.randf_range(WANDER_MIN_DISTANCE, WANDER_MAX_DISTANCE)
-	var requested_target := enemy.global_position + random_direction * random_distance
-	var navigation_target := navigation_component._get_closest_navigation_point(requested_target)
-	if navigation_target.distance_to(enemy.global_position) < WANDER_ARRIVAL_RADIUS:
-		navigation_target = requested_target
+	if not enemy.can_attack():
+		enemy.set_state(enemy.State.IDLE)
+		return
 
-	wander_target = navigation_target
-	wander_timer = enemy.rng.randf_range(WANDER_MIN_REPICK_TIME, WANDER_MAX_REPICK_TIME)
+	enemy.set_state(enemy.State.ATTACK)
+	attack_component.start_attack(current_target.global_position - enemy.global_position)
 
-func _reset_wander() -> void:
-	wander_target = enemy.global_position if enemy != null else Vector2.ZERO
-	wander_timer = 0.0
+func _should_chase_target() -> bool:
+	if not _has_target():
+		return false
+
+	var distance_to_target := enemy.global_position.distance_to(current_target.global_position)
+	if enemy.state == enemy.State.CHASE or enemy.state == enemy.State.ATTACK:
+		return distance_to_target <= enemy.disengage_radius
+	return distance_to_target <= enemy.detection_radius
+
+func _has_target() -> bool:
+	return current_target != null and is_instance_valid(current_target)
