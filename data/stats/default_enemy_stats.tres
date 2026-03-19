@@ -9,6 +9,26 @@ script = ExtResource("2_stat")
 id = &"max_health"
 base_value = 180.0
 
+[sub_resource type="Resource" id="Stat_enemy_move_speed"]
+script = ExtResource("2_stat")
+id = &"move_speed"
+base_value = 140.0
+
+[sub_resource type="Resource" id="Stat_enemy_acceleration"]
+script = ExtResource("2_stat")
+id = &"acceleration"
+base_value = 900.0
+
+[sub_resource type="Resource" id="Stat_enemy_deceleration"]
+script = ExtResource("2_stat")
+id = &"deceleration"
+base_value = 1400.0
+
+[sub_resource type="Resource" id="Stat_enemy_attack_speed"]
+script = ExtResource("2_stat")
+id = &"attack_speed"
+base_value = 0.9
+
 [sub_resource type="Resource" id="Stat_enemy_attack"]
 script = ExtResource("2_stat")
 id = &"attack"
@@ -21,4 +41,4 @@ base_value = 8.0
 
 [resource]
 script = ExtResource("1_loadout")
-stats = Array[ExtResource("2_stat")]([SubResource("Stat_enemy_max_health"), SubResource("Stat_enemy_attack"), SubResource("Stat_enemy_defense")])
+stats = Array[ExtResource("2_stat")]([SubResource("Stat_enemy_max_health"), SubResource("Stat_enemy_move_speed"), SubResource("Stat_enemy_acceleration"), SubResource("Stat_enemy_deceleration"), SubResource("Stat_enemy_attack_speed"), SubResource("Stat_enemy_attack"), SubResource("Stat_enemy_defense")])

@@ -26,6 +26,7 @@ var hitbox_base_scale: Vector2
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
+	add_to_group("player")
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
 
