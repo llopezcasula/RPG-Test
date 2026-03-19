@@ -54,22 +54,9 @@ func _follow_navigation(speed_scale: float = 1.0, steering_context: Dictionary =
 	navigation_agent.max_speed = move_speed * maxf(speed_scale, 0.0)
 
 	var steering_target: Vector2 = steering_context.get("fallback_target", enemy.navigation_target_position)
-
-	# If the current scene has no baked NavigationRegion2D (for example the
-	# lightweight test scene), the agent still exists but never returns a usable
-	# path. Fall back to direct steering so enemies can still chase instead of
-	# standing still until the player enters attack range.
 	if _can_use_navigation_path():
-		# Godot 4 expects get_next_path_position() during physics so the internal
-		# path state advances correctly as the agent moves between corners.
 		var next_path_position: Vector2 = navigation_agent.get_next_path_position()
-		if navigation_agent.is_navigation_finished():
-			enemy._clear_navigation_motion()
-			if steering_component != null:
-				steering_component.clear_debug_data()
-			return
-
-		if next_path_position.distance_squared_to(enemy.global_position) > 0.01:
+		if not navigation_agent.is_navigation_finished() and next_path_position.distance_squared_to(enemy.global_position) > 0.01:
 			steering_target = next_path_position
 
 	_follow_directly(steering_target, steering_context)
@@ -88,7 +75,6 @@ func _get_closest_navigation_point(requested_position: Vector2) -> Vector2:
 
 func _on_navigation_agent_velocity_computed(safe_velocity: Vector2) -> void:
 	enemy.safe_navigation_velocity = safe_velocity
-
 
 func _can_use_navigation_path() -> bool:
 	var navigation_path: PackedVector2Array = navigation_agent.get_current_navigation_path()
@@ -114,7 +100,7 @@ func _follow_directly(target_position: Vector2, steering_context: Dictionary = {
 	if steering_component != null:
 		desired_direction = steering_component.get_steering_direction(target_position, steering_context)
 		if desired_direction == Vector2.ZERO:
-			desired_direction = to_target.normalized()
+			desired_direction = Vector2.ZERO if float(steering_context.get("arrival_radius", 0.0)) > 0.0 else to_target.normalized()
 
 	var desired_velocity: Vector2 = desired_direction * navigation_agent.max_speed
 	_apply_navigation_velocity(desired_velocity)
@@ -122,12 +108,11 @@ func _follow_directly(target_position: Vector2, steering_context: Dictionary = {
 func _apply_navigation_velocity(desired_velocity: Vector2) -> void:
 	navigation_agent.velocity = desired_velocity
 
-	# Local avoidance still runs through NavigationAgent2D when it has a valid
-	# navigation solution; otherwise the enemy just uses the desired velocity.
 	var applied_velocity: Vector2 = enemy.safe_navigation_velocity if navigation_agent.avoidance_enabled else desired_velocity
 	if applied_velocity == Vector2.ZERO:
 		applied_velocity = desired_velocity
 
-	enemy._update_facing(applied_velocity.normalized())
+	if applied_velocity != Vector2.ZERO:
+		enemy._update_facing(applied_velocity.normalized())
 	var move_speed: float = maxf(movement_component.get_move_speed(), 0.001)
 	movement_component.set_move_direction(applied_velocity / move_speed)
