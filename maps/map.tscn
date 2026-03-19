@@ -488,6 +488,9 @@ sources/5 = SubResource("TileSetAtlasSource_muxxc")
 sources/6 = SubResource("TileSetAtlasSource_ddr3i")
 sources/7 = SubResource("TileSetAtlasSource_pkxpc")
 
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_7c64p"]
+parsed_collision_mask = 4294967041
+
 [node name="Map" type="Node2D" unique_id=1063097512]
 position = Vector2(-507, -635)
 script = ExtResource("20_map_script")
@@ -558,3 +561,6 @@ tile_set = ExtResource("8_lwbun")
 z_index = 2
 tile_map_data = PackedByteArray("AADj/xYAAAAAAAAAAADg/xYAAAAAAAAAAADt/zUAAAAAAAAAAADw/zUAAAAAAAAAAADx/9//AAAAAAAAAAATANv/AAAAAAAAAAAwAOz/AAAAAAAAAAA5AAMAAAAAAAAAAAA3AB4AAAAAAAAAAAAsAC8AAAAAAAAAAAAnADEAAAAAAAAAAAAQADYAAAAAAAAAAADf/yYAAAAAAAAAAADh//b/AAAAAAAAAADi//b/AAAAAAAAAAAEAN7/AAAAAAAAAAAhAOP/AAAAAAAAAAA4AA8AAAAAAAAAAAA3AA8AAAAAAAAAAAAuAAoAAAAAAAAAAAA=")
 tile_set = SubResource("TileSet_75gw7")
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1942650706]
+navigation_polygon = SubResource("NavigationPolygon_7c64p")
