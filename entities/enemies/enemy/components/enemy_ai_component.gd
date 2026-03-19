@@ -64,7 +64,10 @@ func _process_chase(delta: float) -> void:
 		if distance_to_target < slowdown_distance:
 			desired_speed_scale = clampf((distance_to_target - enemy.attack_range) / enemy.attack_slowdown_distance, 0.35, 1.0)
 
-	navigation_component._follow_navigation(desired_speed_scale)
+	navigation_component._follow_navigation(desired_speed_scale, {
+		"mode": "chase",
+		"fallback_target": enemy.current_target.global_position
+	})
 
 func _process_patrol(delta: float) -> void:
 	if enemy.state == enemy.State.ATTACK:
@@ -72,24 +75,23 @@ func _process_patrol(delta: float) -> void:
 		movement_component.decelerate_to_stop(delta)
 		return
 
-	navigation_component._stop_navigation()
-
 	if enemy.global_position.distance_to(enemy.patrol_target) <= enemy.patrol_arrival_distance:
 		enemy.patrol_wait_time -= delta
 		if enemy.patrol_wait_time <= 0.0:
 			_pick_next_patrol_target()
 		else:
+			navigation_component._stop_navigation()
 			movement_component.decelerate_to_stop(delta)
-			enemy._clear_patrol_debug()
 		return
 
-	var patrol_direction: Vector2 = enemy._compute_patrol_direction()
-	if patrol_direction == Vector2.ZERO:
-		movement_component.decelerate_to_stop(delta)
-		return
-
-	enemy._update_facing(patrol_direction)
-	movement_component.set_move_direction(patrol_direction)
+	navigation_component._set_navigation_target(enemy.patrol_target)
+	navigation_component._follow_navigation(1.0, {
+		"mode": "patrol",
+		"fallback_target": enemy.patrol_target,
+		"leash_center": enemy.spawn_position,
+		"leash_radius": enemy.patrol_radius,
+		"leash_strength": enemy.patrol_leash_strength
+	})
 
 func _pick_next_patrol_target() -> void:
 	var angle: float = enemy.rng.randf_range(0.0, TAU)
