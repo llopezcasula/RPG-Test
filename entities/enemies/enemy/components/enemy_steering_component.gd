@@ -110,27 +110,35 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 
 func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 	var danger := _make_empty_weights()
+	if enemy.steering_obstacle_mask == 0 or enemy.steering_obstacle_check_distance <= 0.0:
+		return danger
+
 	var space_state := enemy.get_world_2d().direct_space_state
 	var leash_center: Vector2 = context.get("leash_center", enemy.global_position)
 	var leash_radius: float = float(context.get("leash_radius", 0.0))
 	var to_leash_center: Vector2 = leash_center - enemy.global_position
 	var leash_distance: float = to_leash_center.length()
 	var leash_direction: Vector2 = to_leash_center / leash_distance if leash_distance > 0.001 else Vector2.ZERO
+	var ray_exclusions := _build_ray_exclusions()
+	var ray_start_offset := maxf(enemy.agent_radius * 0.6, 4.0)
+	var ray_length := maxf(enemy.steering_obstacle_check_distance - ray_start_offset, 0.001)
 
 	for i in sample_directions.size():
 		var direction: Vector2 = sample_directions[i]
+		var ray_start := enemy.global_position + direction * ray_start_offset
 		var query := PhysicsRayQueryParameters2D.create(
-			enemy.global_position,
+			ray_start,
 			enemy.global_position + direction * enemy.steering_obstacle_check_distance,
 			enemy.steering_obstacle_mask
 		)
-		query.exclude = [enemy]
+		query.collide_with_areas = false
+		query.exclude = ray_exclusions
 		var hit := space_state.intersect_ray(query)
 
 		var score := 0.0
 		if not hit.is_empty():
 			var hit_position: Vector2 = hit["position"]
-			var distance_ratio := enemy.global_position.distance_to(hit_position) / maxf(enemy.steering_obstacle_check_distance, 0.001)
+			var distance_ratio := ray_start.distance_to(hit_position) / ray_length
 			score = maxf(score, 1.0 - clampf(distance_ratio, 0.0, 1.0))
 
 		if leash_radius > 0.001 and leash_distance > leash_radius and leash_direction != Vector2.ZERO:
@@ -141,6 +149,20 @@ func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 		danger[i] = clampf(score, 0.0, 1.0)
 
 	return danger
+
+func _build_ray_exclusions() -> Array:
+	var exclusions: Array = [enemy]
+	if enemy == null:
+		return exclusions
+
+	if enemy.hit_box != null:
+		exclusions.append(enemy.hit_box)
+
+	var hurt_box := enemy.get_node_or_null(^"Hurtbox")
+	if hurt_box != null:
+		exclusions.append(hurt_box)
+
+	return exclusions
 
 func _combine_weights(interest: PackedFloat32Array, danger: PackedFloat32Array, context: Dictionary) -> PackedFloat32Array:
 	var final_weights := _make_empty_weights()
