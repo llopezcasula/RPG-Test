@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="StatLoadout" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://resources/stat_loadout.gd" id="1_loadout"]
+[ext_resource type="Script" path="res://systems/stats/data/stat.gd" id="2_stat"]
+
+[sub_resource type="Resource" id="Stat_enemy_max_health"]
+script = ExtResource("2_stat")
+id = &"max_health"
+base_value = 180.0
+
+[sub_resource type="Resource" id="Stat_enemy_attack"]
+script = ExtResource("2_stat")
+id = &"attack"
+base_value = 24.0
+
+[sub_resource type="Resource" id="Stat_enemy_defense"]
+script = ExtResource("2_stat")
+id = &"defense"
+base_value = 8.0
+
+[resource]
+script = ExtResource("1_loadout")
+stats = [SubResource("Stat_enemy_max_health"), SubResource("Stat_enemy_attack"), SubResource("Stat_enemy_defense")]

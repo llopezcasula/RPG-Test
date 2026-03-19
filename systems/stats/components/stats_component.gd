@@ -7,11 +7,14 @@ signal stat_removed(stat_id: StringName)
 signal modifier_applied(stat_id: StringName, modifier: StatModifier)
 signal modifier_removed(stat_id: StringName, modifier: StatModifier)
 
+@export var stats_source: StatLoadout
 @export var stats: Array[Stat] = []
 
 var _stats_by_id: Dictionary[StringName, Stat] = {}
 
 func _enter_tree() -> void:
+	if stats_source != null:
+		stats = stats_source.build_stats()
 	_rebuild_cache()
 
 func add_stat(stat: Stat, replace_existing: bool = true) -> void:
