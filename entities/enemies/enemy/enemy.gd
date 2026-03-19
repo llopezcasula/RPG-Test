@@ -26,7 +26,6 @@ enum State {
 @export var navigation_target_refresh_distance: float = 16.0
 @export var navigation_path_desired_distance: float = 12.0
 @export var navigation_target_desired_distance: float = 18.0
-@export var navigation_patrol_snap_distance: float = 16.0
 @export var navigation_attack_slowdown_distance: float = 28.0
 
 @export_category("Avoidance")
@@ -200,8 +199,6 @@ func _pick_next_patrol_target() -> void:
 	var distance := rng.randf_range(12.0, patrol_radius)
 	var requested_patrol_target := spawn_position + Vector2.RIGHT.rotated(angle) * distance
 	patrol_target = _get_closest_navigation_point(requested_patrol_target)
-	if patrol_target.distance_to(global_position) <= navigation_patrol_snap_distance:
-		patrol_target = spawn_position
 	patrol_wait_time = rng.randf_range(patrol_idle_time.x, patrol_idle_time.y)
 
 func _can_chase_target() -> bool:
@@ -230,13 +227,12 @@ func _configure_navigation_agent() -> void:
 	navigation_agent.neighbor_distance = navigation_neighbor_distance
 	navigation_agent.max_neighbors = navigation_max_neighbors
 	navigation_agent.time_horizon_agents = navigation_time_horizon
-	navigation_agent.max_speed = movement_component.get_move_speed()
+	navigation_agent.max_speed = _get_navigation_speed()
 	navigation_agent.velocity_computed.connect(_on_navigation_agent_velocity_computed)
 
-func _set_navigation_target(requested_position: Vector2, force_repath: bool = false) -> void:
+func _set_navigation_target(requested_position: Vector2) -> void:
 	var next_target := _get_closest_navigation_point(requested_position)
-	var should_repath := force_repath
-	should_repath = should_repath or not has_navigation_target
+	var should_repath := not has_navigation_target
 	should_repath = should_repath or navigation_repath_remaining <= 0.0
 	should_repath = should_repath or navigation_target_position.distance_to(next_target) >= navigation_target_refresh_distance
 
@@ -253,22 +249,20 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 		movement_component.set_move_direction(Vector2.ZERO)
 		return
 
-	navigation_agent.max_speed = movement_component.get_move_speed() * maxf(speed_scale, 0.0)
+	navigation_agent.max_speed = _get_navigation_speed() * maxf(speed_scale, 0.0)
 
 	# Godot 4 expects get_next_path_position() to be called during physics while
 	# navigating so the internal path state advances correctly at corners.
 	var next_path_position := navigation_agent.get_next_path_position()
 	if navigation_agent.is_navigation_finished():
 		movement_component.set_move_direction(Vector2.ZERO)
-		navigation_agent.velocity = Vector2.ZERO
-		safe_navigation_velocity = Vector2.ZERO
+		_clear_navigation_velocity()
 		return
 
 	var to_next_point := next_path_position - global_position
 	if to_next_point.length_squared() <= 0.01:
 		movement_component.set_move_direction(Vector2.ZERO)
-		navigation_agent.velocity = Vector2.ZERO
-		safe_navigation_velocity = Vector2.ZERO
+		_clear_navigation_velocity()
 		return
 
 	var desired_velocity := to_next_point.normalized() * navigation_agent.max_speed
@@ -282,13 +276,12 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 		applied_velocity = desired_velocity
 
 	_update_facing(applied_velocity.normalized())
-	var move_speed := maxf(movement_component.get_move_speed(), 0.001)
+	var move_speed := maxf(_get_navigation_speed(), 0.001)
 	movement_component.set_move_direction(applied_velocity / move_speed)
 
 func _stop_navigation() -> void:
 	has_navigation_target = false
-	navigation_agent.velocity = Vector2.ZERO
-	safe_navigation_velocity = Vector2.ZERO
+	_clear_navigation_velocity()
 	movement_component.set_move_direction(Vector2.ZERO)
 
 func _get_closest_navigation_point(requested_position: Vector2) -> Vector2:
@@ -296,6 +289,15 @@ func _get_closest_navigation_point(requested_position: Vector2) -> Vector2:
 	if navigation_map.is_valid():
 		return NavigationServer2D.map_get_closest_point(navigation_map, requested_position)
 	return requested_position
+
+func _get_navigation_speed() -> float:
+	if stats_component == null:
+		return movement_component.speed
+	return stats_component.get_stat_value(movement_component.move_speed_stat_id, movement_component.speed)
+
+func _clear_navigation_velocity() -> void:
+	navigation_agent.velocity = Vector2.ZERO
+	safe_navigation_velocity = Vector2.ZERO
 
 func _start_attack(direction: Vector2) -> void:
 	state = State.ATTACK
