@@ -93,7 +93,7 @@ func _process_patrol(delta: float) -> void:
 		return
 
 	navigation_component._set_navigation_target(enemy.patrol_target)
-	navigation_component._follow_navigation(1.0, {
+	navigation_component._follow_navigation(enemy.patrol_move_speed_scale, {
 		"mode": "patrol",
 		"fallback_target": enemy.patrol_target,
 		"leash_center": enemy.spawn_position,

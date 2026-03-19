@@ -36,7 +36,7 @@ enum State {
 
 # Patrol
 @export_category("Patrol")
-@export var patrol_radius: float = 72.0
+@export var patrol_radius: float = 112.0
 @export var patrol_idle_time: Vector2 = Vector2(1.0, 2.0)
 @export var patrol_repath_distance: float = 8.0
 @export var patrol_snap_distance: float = 16.0
@@ -44,6 +44,7 @@ enum State {
 @export var patrol_point_min_distance: float = 12.0
 @export var patrol_arrival_distance: float = 10.0
 @export var patrol_wander_duration: Vector2 = Vector2(1.25, 2.5)
+@export_range(0.1, 1.0, 0.05) var patrol_move_speed_scale: float = 0.65
 @export var patrol_turn_angle_range: Vector2 = Vector2(35.0, 85.0)
 @export var patrol_radius_step_ratio: float = 0.2
 
