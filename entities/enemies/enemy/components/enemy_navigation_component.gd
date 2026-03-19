@@ -60,7 +60,7 @@ func _follow_navigation(speed_scale: float = 1.0, steering_context: Dictionary =
 	var move_speed: float = movement_component.get_move_speed()
 	navigation_agent.max_speed = move_speed * maxf(speed_scale, 0.0)
 
-	var steering_target: Vector2 = steering_context.get("fallback_target", enemy.navigation_target_position)
+	var steering_target: Vector2 = enemy.navigation_target_position
 	if _can_use_navigation_path():
 		var next_path_position: Vector2 = navigation_agent.get_next_path_position()
 		if not navigation_agent.is_navigation_finished() and next_path_position.distance_squared_to(enemy.global_position) > 0.01:

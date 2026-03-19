@@ -34,25 +34,6 @@ enum State {
 @export var max_neighbors: int = 8
 @export var time_horizon: float = 0.8
 
-# Patrol
-@export_category("Patrol")
-@export var patrol_radius: float = 112.0
-@export var patrol_idle_time: Vector2 = Vector2(1.0, 2.0)
-@export var patrol_repath_distance: float = 8.0
-@export var patrol_snap_distance: float = 16.0
-@export var patrol_leash_strength: float = 1.35
-@export var patrol_point_min_distance: float = 12.0
-@export var patrol_arrival_radius: float = 12.0
-@export var patrol_slow_radius: float = 36.0
-@export var patrol_wander_duration: Vector2 = Vector2(1.5, 3.0)
-@export_range(0.1, 1.0, 0.05) var patrol_move_speed_scale: float = 0.45
-@export_range(0.1, 1.0, 0.05) var patrol_return_speed_scale: float = 0.55
-@export var patrol_return_distance: float = 132.0
-@export var patrol_return_slow_radius: float = 52.0
-@export var patrol_target_retry_count: int = 8
-@export var patrol_direction_continuity: float = 6.0
-@export var patrol_anchor_to_spawn: bool = true
-
 # Steering
 @export_category("Steering")
 @export var steering_sample_count: int = 16
@@ -71,7 +52,7 @@ enum State {
 
 # Debug
 @export_category("Debug")
-@export var debug_patrol_vectors: bool = true
+@export var debug_wander_vectors: bool = true
 @export var steering_debug_radius: float = 56.0
 
 # Attack
@@ -104,7 +85,6 @@ var safe_navigation_velocity: Vector2 = Vector2.ZERO
 @onready var ai_component: EnemyAIComponent = $EnemyAIComponent
 @onready var navigation_component: EnemyNavigationComponent = $EnemyNavigationComponent
 @onready var steering_component: EnemySteeringComponent = $EnemySteeringComponent
-@onready var wander_component: EnemyWanderComponent = $EnemyWanderComponent
 @onready var attack_component: EnemyAttackComponent = $EnemyAttackComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
@@ -123,9 +103,7 @@ func _ready() -> void:
 
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
-	wander_component.setup(self, navigation_component)
-	wander_component.set_wander_origin(global_position)
-	ai_component.setup(self, movement_component, navigation_component, wander_component)
+	ai_component.setup(self, movement_component, navigation_component)
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
 
 	hitbox_base_position = hit_box.position

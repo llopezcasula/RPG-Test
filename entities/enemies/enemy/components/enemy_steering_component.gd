@@ -56,7 +56,7 @@ func get_steering_direction(target_position: Vector2, context: Dictionary = {}) 
 		return last_steering
 
 	last_interest = _compute_interest(target_direction, context)
-	last_danger = _compute_danger(context)
+	last_danger = _compute_danger()
 	last_final = _combine_weights(last_interest, last_danger, context)
 
 	var steering := _build_steering_vector(last_final)
@@ -78,15 +78,6 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 	var interest := _make_empty_weights()
 	var previous_direction: Vector2 = last_steering.normalized() if last_steering.length_squared() > 0.0001 else target_direction
 	var commit_strength: float = clampf(float(context.get("commit_strength", enemy.steering_commitment_strength)), 0.0, 1.0)
-	var leash_center: Vector2 = context.get("leash_center", enemy.global_position)
-	var leash_radius: float = float(context.get("leash_radius", 0.0))
-	var leash_strength: float = maxf(float(context.get("leash_strength", 0.0)), 0.0)
-	var to_leash_center: Vector2 = leash_center - enemy.global_position
-	var leash_distance: float = to_leash_center.length()
-	var leash_direction: Vector2 = to_leash_center / leash_distance if leash_distance > 0.001 else Vector2.ZERO
-	var leash_push_ratio: float = 0.0
-	if leash_radius > 0.001:
-		leash_push_ratio = clampf((leash_distance - leash_radius * 0.75) / maxf(leash_radius * 0.25, 0.001), 0.0, 1.0)
 
 	for i in sample_directions.size():
 		var direction: Vector2 = sample_directions[i]
@@ -97,28 +88,16 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 		continuity_alignment = pow(continuity_alignment, enemy.steering_commitment_curve)
 
 		var score := lerpf(target_alignment, continuity_alignment, commit_strength * enemy.steering_inertia_weight)
-
-		if leash_direction != Vector2.ZERO and leash_push_ratio > 0.0 and leash_strength > 0.0:
-			var return_alignment := maxf(direction.dot(leash_direction), 0.0)
-			var outward_alignment := maxf(direction.dot(-leash_direction), 0.0)
-			score += return_alignment * leash_push_ratio * leash_strength
-			score *= 1.0 - outward_alignment * leash_push_ratio
-
 		interest[i] = clampf(score, 0.0, 1.0)
 
 	return interest
 
-func _compute_danger(context: Dictionary) -> PackedFloat32Array:
+func _compute_danger() -> PackedFloat32Array:
 	var danger := _make_empty_weights()
 	if enemy.steering_obstacle_mask == 0 or enemy.steering_obstacle_check_distance <= 0.0:
 		return danger
 
 	var space_state := enemy.get_world_2d().direct_space_state
-	var leash_center: Vector2 = context.get("leash_center", enemy.global_position)
-	var leash_radius: float = float(context.get("leash_radius", 0.0))
-	var to_leash_center: Vector2 = leash_center - enemy.global_position
-	var leash_distance: float = to_leash_center.length()
-	var leash_direction: Vector2 = to_leash_center / leash_distance if leash_distance > 0.001 else Vector2.ZERO
 	var ray_exclusions := _build_ray_exclusions()
 	var ray_start_offset := maxf(enemy.agent_radius * 0.6, 4.0)
 	var ray_length := maxf(enemy.steering_obstacle_check_distance - ray_start_offset, 0.001)
@@ -140,11 +119,6 @@ func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 			var hit_position: Vector2 = hit["position"]
 			var distance_ratio := ray_start.distance_to(hit_position) / ray_length
 			score = maxf(score, 1.0 - clampf(distance_ratio, 0.0, 1.0))
-
-		if leash_radius > 0.001 and leash_distance > leash_radius and leash_direction != Vector2.ZERO:
-			var outward_alignment := maxf(direction.dot(-leash_direction), 0.0)
-			var leash_ratio := clampf((leash_distance - leash_radius) / leash_radius, 0.0, 1.0)
-			score = maxf(score, outward_alignment * leash_ratio)
 
 		danger[i] = clampf(score, 0.0, 1.0)
 
