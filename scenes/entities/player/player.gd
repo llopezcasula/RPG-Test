@@ -1,5 +1,10 @@
 extends CharacterBody2D
 
+# Example entity usage:
+# - data lives in StatsComponent as reusable Stat resources
+# - behavior reads from stat ids, so adding a new stat later is usually data-only
+#   until some component decides to use it
+
 enum State {
 	IDLE,
 	RUN,
@@ -7,9 +12,11 @@ enum State {
 	DEAD
 }
 
-@export_category("Stats")
-@export var attack_speed: float = 0.6
-@export var attack_damage: int = 60
+@export_category("Combat")
+@export var attack_speed_stat_id: StringName = &"attack_speed"
+@export var attack_damage_stat_id: StringName = &"attack"
+@export var fallback_attack_speed: float = 0.6
+@export var fallback_attack_damage: float = 60.0
 @export var debug_hitbox: bool = true
 
 var state: State = State.IDLE
@@ -120,7 +127,7 @@ func attack() -> void:
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
 	update_animation()
 
-	await get_tree().create_timer(attack_speed).timeout
+	await get_tree().create_timer(get_attack_speed()).timeout
 
 	if state == State.DEAD:
 		return
@@ -133,7 +140,7 @@ func attack() -> void:
 	state = State.IDLE
 	update_animation()
 
-func take_damage(damage_taken: int) -> void:
+func take_damage(damage_taken: float) -> void:
 	var health_component := get_health_component()
 	if health_component == null:
 		return
@@ -143,7 +150,17 @@ func take_damage(damage_taken: int) -> void:
 func get_health_component() -> HealthComponent:
 	if stats_component == null:
 		return null
-	return stats_component.get_health_component()
+	return stats_component.get_node_or_null("HealthComponent") as HealthComponent
+
+func get_attack_speed() -> float:
+	if stats_component == null:
+		return fallback_attack_speed
+	return stats_component.get_stat_value(attack_speed_stat_id, fallback_attack_speed)
+
+func get_attack_damage() -> float:
+	if stats_component == null:
+		return fallback_attack_damage
+	return stats_component.get_stat_value(attack_damage_stat_id, fallback_attack_damage)
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
@@ -157,4 +174,4 @@ func _on_health_component_died() -> void:
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
 	if area.owner != null and area.owner.has_method("take_damage"):
-		area.owner.take_damage(attack_damage)
+		area.owner.take_damage(get_attack_damage())

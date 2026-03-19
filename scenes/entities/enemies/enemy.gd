@@ -10,7 +10,7 @@ func _ready() -> void:
 	if health_component != null:
 		health_component.died.connect(_on_health_component_died)
 
-func take_damage(damage_taken: int) -> void:
+func take_damage(damage_taken: float) -> void:
 	var health_component := get_health_component()
 	if health_component == null:
 		return
@@ -20,7 +20,7 @@ func take_damage(damage_taken: int) -> void:
 func get_health_component() -> HealthComponent:
 	if stats_component == null:
 		return null
-	return stats_component.get_health_component()
+	return stats_component.get_node_or_null("HealthComponent") as HealthComponent
 
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
