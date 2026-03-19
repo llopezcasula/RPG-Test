@@ -43,6 +43,7 @@ enum State {
 @export var patrol_slow_radius: float = 36.0
 @export var patrol_wander_duration: Vector2 = Vector2(1.5, 3.0)
 @export_range(0.1, 1.0, 0.05) var patrol_move_speed_scale: float = 0.45
+@export_range(0.1, 1.0, 0.05) var return_move_speed_scale: float = 0.65
 @export var patrol_target_retry_count: int = 8
 
 # Steering

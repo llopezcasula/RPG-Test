@@ -5,6 +5,7 @@ var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_component: EnemyNavigationComponent
 var wander_component: EnemyWanderComponent
+var was_chasing_target: bool = false
 
 func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent, owner_wander_component: EnemyWanderComponent) -> void:
 	enemy = owner_enemy
@@ -31,8 +32,10 @@ func _can_chase_target() -> bool:
 	return false
 
 func _process_chase(delta: float) -> void:
-	if wander_component != null:
+	if wander_component != null and not was_chasing_target:
 		wander_component.stop()
+
+	was_chasing_target = true
 
 	if enemy.current_target == null:
 		navigation_component._stop_navigation()
@@ -76,6 +79,10 @@ func _process_chase(delta: float) -> void:
 	})
 
 func _process_patrol(delta: float) -> void:
+	if was_chasing_target and wander_component != null:
+		wander_component.begin_return_to_origin()
+	was_chasing_target = false
+
 	if enemy.state == enemy.State.ATTACK:
 		navigation_component._stop_navigation()
 		movement_component.decelerate_to_stop(delta)
