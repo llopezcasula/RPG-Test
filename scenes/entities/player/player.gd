@@ -19,6 +19,7 @@ var state: State = State.IDLE
 var move_direction: Vector2 = Vector2.ZERO
 var hitbox_base_position: Vector2
 var hitbox_base_rotation: float
+var attack_facing_left: bool = false
 
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
@@ -51,6 +52,7 @@ func _physics_process(delta: float) -> void:
 	if state == State.ATTACK:
 		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
 		move_and_slide()
+		sync_attack_hitbox_transform()
 		return
 
 	movement_loop(delta)
@@ -98,20 +100,15 @@ func attack() -> void:
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var attack_dir: Vector2 = (mouse_pos - global_position).normalized()
 
-	var facing_left: bool = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
-	sprite.flip_h = facing_left
+	attack_facing_left = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
+	sprite.flip_h = attack_facing_left
 
-	# Reset to base first
+	# Reset to base first before the animation applies its current frame.
 	hit_box.position = hitbox_base_position
 	hit_box.rotation = hitbox_base_rotation
 
-	# Mirror hitbox for left-facing horizontal attacks
-	if facing_left:
-		hit_box.position = Vector2(-hitbox_base_position.x, hitbox_base_position.y)
-		hit_box.rotation = -hitbox_base_rotation
-
 	if debug_hitbox:
-		print("facing_left: ", facing_left)
+		print("facing_left: ", attack_facing_left)
 		print("attack_dir: ", attack_dir)
 		print("hitbox local position: ", hit_box.position)
 		print("hitbox global position: ", hit_box.global_position)
@@ -119,15 +116,25 @@ func attack() -> void:
 
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
 	update_animation()
+	sync_attack_hitbox_transform()
 
 	await get_tree().create_timer(attack_speed).timeout
 
 	set_attack_hitbox_enabled(false)
+	attack_facing_left = false
 	hit_box.position = hitbox_base_position
 	hit_box.rotation = hitbox_base_rotation
 
 	state = State.IDLE
 	update_animation()
+
+
+func sync_attack_hitbox_transform() -> void:
+	if not attack_facing_left:
+		return
+
+	hit_box.position = Vector2(-abs(hit_box.position.x), hit_box.position.y)
+	hit_box.rotation = -abs(hit_box.rotation)
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
