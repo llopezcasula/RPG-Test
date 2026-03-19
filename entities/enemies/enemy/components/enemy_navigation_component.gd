@@ -28,6 +28,13 @@ func _set_navigation_target(requested_position: Vector2, force_repath: bool = fa
 	var next_target: Vector2 = requested_position
 	var navigation_path: PackedVector2Array = _get_navigation_path_to(requested_position)
 	if navigation_path.size() > 0:
+		# Keep the requested world-space target whenever it is already reachable.
+		# Snapping every target to the navmesh can bias the enemy toward an incorrect stop point.
+		var path_endpoint: Vector2 = navigation_path[navigation_path.size() - 1]
+		var endpoint_error: float = path_endpoint.distance_to(requested_position)
+		if endpoint_error > enemy.target_desired_distance:
+			next_target = path_endpoint
+	elif _has_navigation_map():
 		next_target = _get_closest_navigation_point(requested_position)
 
 	var should_repath: bool = force_repath
@@ -87,6 +94,9 @@ func _get_navigation_path_to(target_position: Vector2) -> PackedVector2Array:
 	if not navigation_map.is_valid():
 		return PackedVector2Array()
 	return NavigationServer2D.map_get_path(navigation_map, enemy.global_position, target_position, true)
+
+func _has_navigation_map() -> bool:
+	return navigation_agent != null and navigation_agent.get_navigation_map().is_valid()
 
 func _follow_directly(target_position: Vector2, steering_context: Dictionary = {}) -> void:
 	var to_target: Vector2 = target_position - enemy.global_position
