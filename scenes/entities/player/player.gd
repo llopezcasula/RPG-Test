@@ -124,7 +124,6 @@ func attack() -> void:
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
 	update_animation()
 	sync_attack_hitbox_transform()
-	call_deferred("sync_attack_hitbox_transform")
 
 	await get_tree().create_timer(attack_speed).timeout
 
@@ -139,13 +138,12 @@ func attack() -> void:
 
 
 func sync_attack_hitbox_transform() -> void:
-	if attack_facing_left:
-		hit_box.position = Vector2(-abs(hit_box.position.x), hit_box.position.y)
-		hit_box.rotation = -abs(hit_box.rotation)
-		hit_box.scale = Vector2(-abs(hitbox_base_scale.x), hitbox_base_scale.y)
+	if not attack_facing_left:
 		return
 
-	hit_box.scale = hitbox_base_scale
+	hit_box.position = Vector2(-abs(hit_box.position.x), hit_box.position.y)
+	hit_box.rotation = -abs(hit_box.rotation)
+	hit_box.scale = Vector2(-abs(hitbox_base_scale.x), hitbox_base_scale.y)
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
