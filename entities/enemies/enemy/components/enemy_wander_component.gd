@@ -143,6 +143,13 @@ func _start_wander_phase() -> void:
 	has_wander_target = true
 	current_mode = MODE_WANDER
 	state_time_remaining = enemy.rng.randf_range(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
+	_follow_target(
+		enemy.patrol_move_speed_scale,
+		wander_target,
+		enemy.patrol_arrival_radius,
+		enemy.patrol_slow_radius,
+		MODE_WANDER
+	)
 
 func _pick_next_wander_target() -> bool:
 	if enemy == null or navigation_component == null:
@@ -156,12 +163,21 @@ func _pick_next_wander_target() -> bool:
 		var distance := enemy.rng.randf_range(min_distance, enemy.patrol_radius)
 		var angle := enemy.rng.randf_range(0.0, TAU)
 		var raw_candidate := home_position + Vector2.RIGHT.rotated(angle) * distance
-		var navigable_candidate := navigation_component._get_closest_navigation_point(raw_candidate)
-		if navigable_candidate.distance_to(home_position) > enemy.patrol_radius:
+		var patrol_candidate := raw_candidate
+
+		if navigation_component._has_navigation_map():
+			var snapped_candidate := navigation_component._get_closest_navigation_point(raw_candidate)
+			var snapped_is_usable := snapped_candidate.distance_to(home_position) <= enemy.patrol_radius
+			snapped_is_usable = snapped_is_usable and snapped_candidate.distance_to(enemy.global_position) >= min_distance
+			if snapped_is_usable:
+				patrol_candidate = snapped_candidate
+
+		if patrol_candidate.distance_to(home_position) > enemy.patrol_radius:
 			continue
-		if navigable_candidate.distance_to(enemy.global_position) < min_distance:
+		if patrol_candidate.distance_to(enemy.global_position) < min_distance:
 			continue
-		wander_target = navigable_candidate
+
+		wander_target = patrol_candidate
 		return true
 
 	return false
