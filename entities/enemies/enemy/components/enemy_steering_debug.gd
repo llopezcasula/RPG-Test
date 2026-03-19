@@ -2,20 +2,20 @@ extends Node2D
 class_name EnemySteeringDebug
 
 @export var steering_component_path: NodePath = ^"../EnemySteeringComponent"
-@export var wander_component_path: NodePath = ^"../EnemyWanderComponent"
+@export var ai_component_path: NodePath = ^"../EnemyAIComponent"
 
 @onready var steering_component: EnemySteeringComponent = get_node_or_null(steering_component_path) as EnemySteeringComponent
-@onready var wander_component: EnemyWanderComponent = get_node_or_null(wander_component_path) as EnemyWanderComponent
+@onready var ai_component: EnemyAIComponent = get_node_or_null(ai_component_path) as EnemyAIComponent
 @onready var enemy: Enemy = get_parent() as Enemy
 
 func _process(_delta: float) -> void:
-	if enemy != null and enemy.debug_patrol_vectors:
+	if enemy != null and enemy.debug_wander_vectors:
 		queue_redraw()
 
 func _draw() -> void:
 	if enemy == null or steering_component == null:
 		return
-	if not enemy.debug_patrol_vectors:
+	if not enemy.debug_wander_vectors:
 		return
 	if steering_component.sample_directions.is_empty():
 		return
@@ -49,15 +49,7 @@ func _draw() -> void:
 	if steering_component.last_interest_position != Vector2.ZERO:
 		draw_circle(to_local(steering_component.last_interest_position), 4.0, Color.DEEP_SKY_BLUE)
 
-	if wander_component != null and wander_component.has_wander_origin:
-		var home_position := wander_component._get_home_position()
-		draw_arc(to_local(home_position), enemy.patrol_radius, 0.0, TAU, 48, Color(0.4, 0.7, 1.0, 0.35), 1.5)
-		if wander_component.current_mode == EnemyWanderComponent.MODE_RETURN_HOME:
-			draw_arc(to_local(home_position), enemy.patrol_return_distance, 0.0, TAU, 48, Color(1.0, 0.65, 0.25, 0.22), 1.0)
-		if wander_component.has_wander_target or wander_component.current_mode == EnemyWanderComponent.MODE_RETURN_HOME:
-			var local_target := to_local(wander_component.wander_target)
-			var slow_radius := enemy.patrol_slow_radius if wander_component.current_mode != EnemyWanderComponent.MODE_RETURN_HOME else enemy.patrol_return_slow_radius
-			var target_color := Color(0.3, 0.9, 1.0, 0.55) if wander_component.current_mode != EnemyWanderComponent.MODE_RETURN_HOME else Color(1.0, 0.75, 0.25, 0.65)
-			draw_circle(local_target, enemy.patrol_arrival_radius, Color(target_color.r, target_color.g, target_color.b, 0.18))
-			draw_arc(local_target, slow_radius, 0.0, TAU, 32, Color(target_color.r, target_color.g, target_color.b, 0.28), 1.0)
-			draw_line(Vector2.ZERO, local_target, target_color, 1.5)
+	if ai_component != null:
+		var local_target := to_local(ai_component.wander_target)
+		draw_circle(local_target, EnemyAIComponent.WANDER_ARRIVAL_RADIUS, Color(0.3, 0.9, 1.0, 0.18))
+		draw_line(Vector2.ZERO, local_target, Color(0.3, 0.9, 1.0, 0.55), 1.5)
