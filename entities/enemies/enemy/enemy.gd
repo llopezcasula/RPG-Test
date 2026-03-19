@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+
+
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
 
