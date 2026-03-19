@@ -355,6 +355,8 @@ speed = 140.0
 acceleration = 900.0
 deceleration = 1400.0
 
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1265874122]
+
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)
 texture = ExtResource("2_c8ylr")

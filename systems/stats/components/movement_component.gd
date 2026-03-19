@@ -67,6 +67,9 @@ func stop_immediately() -> void:
 func get_move_direction() -> Vector2:
 	return move_direction
 
+func get_move_speed() -> float:
+	return _get_stat_value(move_speed_stat_id, speed)
+
 func _resolve_body() -> CharacterBody2D:
 	if body_path != NodePath():
 		return get_node_or_null(body_path) as CharacterBody2D
