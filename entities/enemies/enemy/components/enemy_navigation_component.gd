@@ -1,6 +1,7 @@
 extends Node
 class_name EnemyNavigationComponent
 
+# Runtime state
 var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_agent: NavigationAgent2D

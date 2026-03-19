@@ -1,6 +1,7 @@
 extends Node
 class_name EnemyAIComponent
 
+# Runtime state
 var enemy: Enemy
 var navigation_component: EnemyNavigationComponent
 var attack_component: EnemyAttackComponent
@@ -46,6 +47,7 @@ func process_idle(_delta: float) -> void:
 	navigation_component.stop()
 	enemy.set_state(enemy.State.IDLE)
 
+	# TODO: Add future patrol/wander behavior here when the movement design is ready.
 	if can_chase_target():
 		enemy.set_state(enemy.State.CHASE)
 		process_chase(0.0)

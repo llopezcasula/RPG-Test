@@ -34,7 +34,6 @@ var facing_direction: Vector2 = Vector2.DOWN
 var attack_cooldown_remaining: float = 0.0
 
 # Component references
-@onready var stats_component: StatsComponent = $StatsComponent
 @onready var health_component: HealthComponent = $StatsComponent/HealthComponent
 @onready var movement_component: MovementComponent = $MovementComponent
 @onready var combat_component: CombatComponent = $CombatComponent
@@ -67,9 +66,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
-		navigation_component.stop()
-		movement_component.stop_immediately()
-		velocity = Vector2.ZERO
+		stop_movement()
 		return
 
 	if attack_cooldown_remaining > 0.0:

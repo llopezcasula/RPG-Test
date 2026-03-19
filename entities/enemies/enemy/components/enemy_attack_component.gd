@@ -3,6 +3,7 @@ class_name EnemyAttackComponent
 
 signal attack_finished
 
+# Runtime state
 var enemy: Enemy
 var combat_component: CombatComponent
 var hit_box: Area2D
@@ -40,10 +41,7 @@ func start_attack(direction: Vector2) -> void:
 
 func cancel_attack() -> void:
 	attack_sequence_id += 1
-	is_active_attack = false
-	attack_hit_targets.clear()
-	set_attack_hitbox_enabled(false)
-	_reset_hitbox_transform()
+	_clear_attack_state()
 	if enemy != null:
 		enemy.stop_movement()
 
@@ -94,14 +92,17 @@ func finish_attack(sequence_id: int) -> void:
 	if not _is_current_attack(sequence_id):
 		return
 
-	is_active_attack = false
-	attack_hit_targets.clear()
-	set_attack_hitbox_enabled(false)
-	_reset_hitbox_transform()
+	_clear_attack_state()
 	attack_finished.emit()
 
 func _is_current_attack(sequence_id: int) -> bool:
 	return is_active_attack and attack_sequence_id == sequence_id and enemy.state != enemy.State.DEAD
+
+func _clear_attack_state() -> void:
+	is_active_attack = false
+	attack_hit_targets.clear()
+	set_attack_hitbox_enabled(false)
+	_reset_hitbox_transform()
 
 func _reset_hitbox_transform() -> void:
 	hit_box.position = hitbox_base_position
