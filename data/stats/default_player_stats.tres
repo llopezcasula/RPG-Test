@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="StatLoadout" load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://resources/stat_loadout.gd" id="1_loadout"]
+[ext_resource type="Script" path="res://systems/stats/data/stat.gd" id="2_stat"]
+
+[sub_resource type="Resource" id="Stat_player_max_health"]
+script = ExtResource("2_stat")
+id = &"max_health"
+base_value = 100.0
+
+[sub_resource type="Resource" id="Stat_player_move_speed"]
+script = ExtResource("2_stat")
+id = &"move_speed"
+base_value = 260.0
+
+[sub_resource type="Resource" id="Stat_player_acceleration"]
+script = ExtResource("2_stat")
+id = &"acceleration"
+base_value = 1800.0
+
+[sub_resource type="Resource" id="Stat_player_deceleration"]
+script = ExtResource("2_stat")
+id = &"deceleration"
+base_value = 2200.0
+
+[sub_resource type="Resource" id="Stat_player_attack_speed"]
+script = ExtResource("2_stat")
+id = &"attack_speed"
+base_value = 0.6
+
+[sub_resource type="Resource" id="Stat_player_attack"]
+script = ExtResource("2_stat")
+id = &"attack"
+base_value = 60.0
+
+[sub_resource type="Resource" id="Stat_player_crit_chance"]
+script = ExtResource("2_stat")
+id = &"crit_chance"
+base_value = 0.15
+
+[resource]
+script = ExtResource("1_loadout")
+stats = [SubResource("Stat_player_max_health"), SubResource("Stat_player_move_speed"), SubResource("Stat_player_acceleration"), SubResource("Stat_player_deceleration"), SubResource("Stat_player_attack_speed"), SubResource("Stat_player_attack"), SubResource("Stat_player_crit_chance")]
