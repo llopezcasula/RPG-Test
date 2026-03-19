@@ -25,6 +25,7 @@ enum State {
 
 # Attack tuning
 @export_category("Attack")
+@export var attack_range: float = 46.0
 @export_range(0.0, 1.0, 0.01) var attack_windup_ratio: float = 0.4
 
 # Runtime state
@@ -51,7 +52,7 @@ func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	animation_tree.active = true
 
-	ai_component.setup(self, navigation_component)
+	ai_component.setup(self, navigation_component, attack_component)
 	navigation_component.setup(self, movement_component, navigation_agent)
 	navigation_component.configure_agent()
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
@@ -110,6 +111,11 @@ func update_facing(direction: Vector2) -> void:
 func can_attack() -> bool:
 	return attack_cooldown_remaining <= 0.0 and not attack_component.is_attacking()
 
+func stop_movement() -> void:
+	navigation_component.stop()
+	movement_component.stop_immediately()
+	velocity = Vector2.ZERO
+
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate() as Node2D
 	if death_scene == null:
@@ -149,10 +155,8 @@ func _on_attack_finished() -> void:
 
 func _on_health_component_died() -> void:
 	set_state(State.DEAD)
-	navigation_component.stop()
-	movement_component.stop_immediately()
+	stop_movement()
 	attack_component.cancel_attack()
-	velocity = Vector2.ZERO
 	death()
 
 func _on_hit_box_body_entered(body: Node2D) -> void:

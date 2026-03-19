@@ -27,6 +27,7 @@ func start_attack(direction: Vector2) -> void:
 	if enemy == null or is_active_attack:
 		return
 
+	enemy.stop_movement()
 	is_active_attack = true
 	attack_sequence_id += 1
 	attack_hit_targets.clear()
@@ -43,6 +44,8 @@ func cancel_attack() -> void:
 	attack_hit_targets.clear()
 	set_attack_hitbox_enabled(false)
 	_reset_hitbox_transform()
+	if enemy != null:
+		enemy.stop_movement()
 
 func is_attacking() -> bool:
 	return is_active_attack
