@@ -4,11 +4,13 @@ class_name EnemyAIComponent
 var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_component: EnemyNavigationComponent
+var wander_component: EnemyWanderComponent
 
-func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent) -> void:
+func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent, owner_wander_component: EnemyWanderComponent) -> void:
 	enemy = owner_enemy
 	movement_component = owner_movement_component
 	navigation_component = owner_navigation_component
+	wander_component = owner_wander_component
 
 func _resolve_target() -> void:
 	enemy.current_target = enemy.get_tree().get_first_node_in_group(enemy.player_group) as CharacterBody2D
@@ -29,6 +31,9 @@ func _can_chase_target() -> bool:
 	return false
 
 func _process_chase(delta: float) -> void:
+	if wander_component != null:
+		wander_component.stop()
+
 	if enemy.current_target == null:
 		navigation_component._stop_navigation()
 		return
@@ -56,8 +61,6 @@ func _process_chase(delta: float) -> void:
 
 	navigation_component._set_navigation_target(enemy.current_target.global_position)
 
-	# Navigation stays owned by EnemyNavigationComponent. AI only chooses when to
-	# chase and how aggressively to approach the current target.
 	var desired_speed_scale: float = 1.0
 	if enemy.attack_slowdown_distance > 0.0:
 		var slowdown_distance: float = enemy.attack_range + enemy.attack_slowdown_distance
@@ -66,7 +69,9 @@ func _process_chase(delta: float) -> void:
 
 	navigation_component._follow_navigation(desired_speed_scale, {
 		"mode": "chase",
-		"fallback_target": enemy.current_target.global_position
+		"fallback_target": enemy.current_target.global_position,
+		"interest_position": enemy.current_target.global_position,
+		"commit_strength": enemy.steering_chase_commitment_strength
 	})
 
 func _process_patrol(delta: float) -> void:
@@ -75,59 +80,9 @@ func _process_patrol(delta: float) -> void:
 		movement_component.decelerate_to_stop(delta)
 		return
 
-	if enemy.patrol_wait_time > 0.0:
-		enemy.patrol_wait_time = maxf(enemy.patrol_wait_time - delta, 0.0)
+	if wander_component == null:
 		navigation_component._stop_navigation()
 		movement_component.decelerate_to_stop(delta)
 		return
 
-	enemy.patrol_goal_time_remaining = maxf(enemy.patrol_goal_time_remaining - delta, 0.0)
-	if enemy.patrol_goal_time_remaining <= 0.0:
-		_pick_next_patrol_target()
-
-	if enemy.global_position.distance_to(enemy.patrol_target) <= enemy.patrol_arrival_distance:
-		enemy.patrol_wait_time = enemy.rng.randf_range(enemy.patrol_idle_time.x, enemy.patrol_idle_time.y)
-		enemy.patrol_goal_time_remaining = 0.0
-		navigation_component._stop_navigation()
-		movement_component.decelerate_to_stop(delta)
-		return
-
-	navigation_component._set_navigation_target(enemy.patrol_target)
-	navigation_component._follow_navigation(enemy.patrol_move_speed_scale, {
-		"mode": "patrol",
-		"fallback_target": enemy.patrol_target,
-		"leash_center": enemy.spawn_position,
-		"leash_radius": enemy.patrol_radius,
-		"leash_strength": enemy.patrol_leash_strength
-	})
-
-func _pick_next_patrol_target() -> void:
-	var requested_patrol_target := enemy.spawn_position
-	var min_turn := minf(enemy.patrol_turn_angle_range.x, enemy.patrol_turn_angle_range.y)
-	var max_turn := maxf(enemy.patrol_turn_angle_range.x, enemy.patrol_turn_angle_range.y)
-	var radius_step := enemy.patrol_radius * clampf(enemy.patrol_radius_step_ratio, 0.0, 1.0)
-
-	for _attempt in 4:
-		if enemy.rng.randf() < 0.25:
-			enemy.patrol_direction_sign *= -1.0
-
-		var turn_amount := deg_to_rad(enemy.rng.randf_range(min_turn, max_turn)) * enemy.patrol_direction_sign
-		enemy.patrol_angle = wrapf(enemy.patrol_angle + turn_amount, 0.0, TAU)
-		enemy.patrol_orbit_radius = clampf(
-			enemy.patrol_orbit_radius + enemy.rng.randf_range(-radius_step, radius_step),
-			enemy.patrol_point_min_distance,
-			enemy.patrol_radius
-		)
-
-		requested_patrol_target = enemy.spawn_position + Vector2.RIGHT.rotated(enemy.patrol_angle) * enemy.patrol_orbit_radius
-		enemy.patrol_target = navigation_component._get_closest_navigation_point(requested_patrol_target)
-		if enemy.patrol_target.distance_to(enemy.global_position) > enemy.patrol_snap_distance:
-			break
-
-	if enemy.patrol_target.distance_to(enemy.global_position) <= enemy.patrol_snap_distance:
-		enemy.patrol_target = enemy.spawn_position + Vector2.RIGHT.rotated(enemy.patrol_angle + PI * 0.5 * enemy.patrol_direction_sign) * enemy.patrol_point_min_distance
-		enemy.patrol_target = navigation_component._get_closest_navigation_point(enemy.patrol_target)
-
-	var min_wander_duration := minf(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
-	var max_wander_duration := maxf(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
-	enemy.patrol_goal_time_remaining = enemy.rng.randf_range(min_wander_duration, max_wander_duration)
+	wander_component.process_wander(delta)
