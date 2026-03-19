@@ -43,6 +43,8 @@ enum State {
 @export var patrol_leash_strength: float = 1.35
 @export var patrol_point_min_distance: float = 12.0
 @export var patrol_arrival_distance: float = 10.0
+@export var patrol_turn_angle_range: Vector2 = Vector2(35.0, 85.0)
+@export var patrol_radius_step_ratio: float = 0.2
 
 # Steering
 @export_category("Steering")
@@ -70,6 +72,9 @@ var spawn_position: Vector2
 var facing_direction: Vector2 = Vector2.DOWN
 var patrol_target: Vector2
 var patrol_wait_time: float = 0.0
+var patrol_angle: float = 0.0
+var patrol_orbit_radius: float = 0.0
+var patrol_direction_sign: float = 1.0
 var attack_cooldown_remaining: float = 0.0
 var aggro_locked: bool = false
 var current_target: CharacterBody2D
@@ -114,7 +119,10 @@ func _ready() -> void:
 	hitbox_base_scale = hit_box.scale
 	attack_component.set_attack_hitbox_enabled(false)
 	navigation_component._configure_navigation_agent()
-	spawn_position = navigation_component._get_closest_navigation_point(global_position)
+	spawn_position = global_position
+	patrol_angle = rng.randf_range(0.0, TAU)
+	patrol_orbit_radius = clampf(patrol_radius * rng.randf_range(0.45, 0.9), patrol_point_min_distance, patrol_radius)
+	patrol_direction_sign = -1.0 if rng.randf() < 0.5 else 1.0
 	patrol_target = spawn_position
 	navigation_target_position = spawn_position
 	update_animation()

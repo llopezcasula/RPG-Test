@@ -32,6 +32,7 @@ func _draw() -> void:
 	for i in directions.size():
 		var direction: Vector2 = directions[i]
 		var end_point := direction * draw_radius
+		var final_end := Vector2.ZERO
 		draw_line(Vector2.ZERO, end_point, Color(1.0, 1.0, 1.0, 0.12), 1.0)
 
 		if interest.size() == directions.size():
@@ -41,17 +42,14 @@ func _draw() -> void:
 			draw_line(Vector2.ZERO, direction * (draw_radius * danger[i]), Color(0.95, 0.2, 0.25, 0.75), 1.5)
 
 		if final_weights.size() == directions.size():
-			var final_end := direction * (draw_radius * final_weights[i])
+			final_end = direction * (draw_radius * final_weights[i])
 			draw_line(Vector2.ZERO, final_end, Color(0.15, 0.85, 1.0, 0.95), 2.0)
 			draw_circle(final_end, 2.0, Color(0.15, 0.85, 1.0, 0.95))
 
-		if fallback_font != null and interest.size() == directions.size() and danger.size() == directions.size() and final_weights.size() == directions.size():
-			var label := "%s|%s|%s" % [
-				enemy._snapped_weight_text(interest[i]),
-				enemy._snapped_weight_text(danger[i]),
-				enemy._snapped_weight_text(final_weights[i])
-			]
-			draw_string(fallback_font, end_point + text_offset, label, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size, Color(0.95, 0.95, 0.95, 0.8))
+		if fallback_font != null and final_weights.size() == directions.size() and final_weights[i] > 0.0:
+			var desire_length := draw_radius * final_weights[i]
+			var label := enemy._snapped_weight_text(desire_length)
+			draw_string(fallback_font, final_end + text_offset, label, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size, Color(0.95, 0.95, 0.95, 0.8))
 
 	if steering_component.last_steering != Vector2.ZERO:
 		draw_line(Vector2.ZERO, steering_component.last_steering * draw_radius, Color.GOLD, 3.0)

@@ -94,10 +94,29 @@ func _process_patrol(delta: float) -> void:
 	})
 
 func _pick_next_patrol_target() -> void:
-	var angle: float = enemy.rng.randf_range(0.0, TAU)
-	var distance: float = enemy.rng.randf_range(enemy.patrol_point_min_distance, enemy.patrol_radius)
-	var requested_patrol_target: Vector2 = enemy.spawn_position + Vector2.RIGHT.rotated(angle) * distance
-	enemy.patrol_target = navigation_component._get_closest_navigation_point(requested_patrol_target)
+	var requested_patrol_target := enemy.spawn_position
+	var min_turn := minf(enemy.patrol_turn_angle_range.x, enemy.patrol_turn_angle_range.y)
+	var max_turn := maxf(enemy.patrol_turn_angle_range.x, enemy.patrol_turn_angle_range.y)
+	var radius_step := enemy.patrol_radius * clampf(enemy.patrol_radius_step_ratio, 0.0, 1.0)
+
+	for _attempt in 4:
+		if enemy.rng.randf() < 0.3:
+			enemy.patrol_direction_sign *= -1.0
+
+		var turn_amount := deg_to_rad(enemy.rng.randf_range(min_turn, max_turn)) * enemy.patrol_direction_sign
+		enemy.patrol_angle = wrapf(enemy.patrol_angle + turn_amount, 0.0, TAU)
+		enemy.patrol_orbit_radius = clampf(
+			enemy.patrol_orbit_radius + enemy.rng.randf_range(-radius_step, radius_step),
+			enemy.patrol_point_min_distance,
+			enemy.patrol_radius
+		)
+
+		requested_patrol_target = enemy.spawn_position + Vector2.RIGHT.rotated(enemy.patrol_angle) * enemy.patrol_orbit_radius
+		enemy.patrol_target = navigation_component._get_closest_navigation_point(requested_patrol_target)
+		if enemy.patrol_target.distance_to(enemy.global_position) > enemy.patrol_snap_distance:
+			break
+
 	if enemy.patrol_target.distance_to(enemy.global_position) <= enemy.patrol_snap_distance:
 		enemy.patrol_target = enemy.spawn_position
+
 	enemy.patrol_wait_time = enemy.rng.randf_range(enemy.patrol_idle_time.x, enemy.patrol_idle_time.y)
