@@ -128,7 +128,7 @@ func _pick_next_wander_target() -> void:
 		return
 
 	var home_position := _get_home_position()
-	var sample_center := home_position if enemy.patrol_anchor_to_spawn else enemy.global_position
+	var sample_center := _get_patrol_center(home_position)
 	var min_distance := minf(enemy.patrol_point_min_distance, enemy.patrol_radius)
 	var max_attempts := maxi(enemy.patrol_target_retry_count, 1)
 	var candidate := home_position
@@ -178,6 +178,14 @@ func _pick_next_wander_target() -> void:
 	has_wander_target = true
 	current_mode = MODE_WANDER
 	repick_time_remaining = enemy.rng.randf_range(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
+
+
+func _get_patrol_center(home_position: Vector2) -> Vector2:
+	if has_wander_origin:
+		return home_position
+	if enemy == null:
+		return Vector2.ZERO
+	return home_position if enemy.patrol_anchor_to_spawn else enemy.global_position
 
 func _get_home_position() -> Vector2:
 	if has_wander_origin:
