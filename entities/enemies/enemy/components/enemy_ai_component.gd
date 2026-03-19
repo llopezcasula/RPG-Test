@@ -47,6 +47,7 @@ func _process_patrol(_delta: float) -> void:
 
 func _process_chase(delta: float) -> void:
 	if not _should_chase_target():
+		repath_timer = 0.0
 		enemy.set_state(enemy.State.IDLE)
 		navigation_component.stop()
 		return
@@ -75,11 +76,13 @@ func _process_attack(delta: float) -> void:
 		return
 
 	if not _has_target():
+		repath_timer = 0.0
 		enemy.set_state(enemy.State.IDLE)
 		return
 
 	var distance_to_target := enemy.global_position.distance_to(current_target.global_position)
 	if distance_to_target > enemy.disengage_radius:
+		repath_timer = 0.0
 		enemy.set_state(enemy.State.IDLE)
 		return
 

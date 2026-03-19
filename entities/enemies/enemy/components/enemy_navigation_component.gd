@@ -5,6 +5,7 @@ var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_agent: NavigationAgent2D
 var has_target_position: bool = false
+var current_target_position: Vector2 = Vector2.ZERO
 
 func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_agent: NavigationAgent2D) -> void:
 	enemy = owner_enemy
@@ -25,6 +26,7 @@ func set_target_position(target: Vector2) -> void:
 		return
 
 	has_target_position = true
+	current_target_position = target
 	navigation_agent.target_position = target
 
 func move_to_target(_delta: float, speed_scale: float = 1.0) -> void:
@@ -38,18 +40,29 @@ func move_to_target(_delta: float, speed_scale: float = 1.0) -> void:
 		return
 
 	var next_path_position := navigation_agent.get_next_path_position()
-	var movement_vector := next_path_position - enemy.global_position
-	if movement_vector.length_squared() <= 0.01:
-		stop()
+	var movement_direction := _get_movement_direction(next_path_position)
+	if movement_direction == Vector2.ZERO:
 		return
 
-	var movement_direction := movement_vector.normalized()
 	enemy.update_facing(movement_direction)
 	movement_component.set_move_direction(movement_direction)
 
 func stop() -> void:
 	has_target_position = false
+	current_target_position = Vector2.ZERO
 	if movement_component != null:
 		movement_component.set_move_direction(Vector2.ZERO)
 	if navigation_agent != null:
 		navigation_agent.velocity = Vector2.ZERO
+
+func _get_movement_direction(next_path_position: Vector2) -> Vector2:
+	var next_path_offset := next_path_position - enemy.global_position
+	if next_path_offset.length_squared() > 0.01:
+		return next_path_offset.normalized()
+
+	var direct_offset := current_target_position - enemy.global_position
+	if direct_offset.length_squared() <= 0.01:
+		stop()
+		return Vector2.ZERO
+
+	return direct_offset.normalized()
