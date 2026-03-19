@@ -267,7 +267,7 @@ _data = {
 animation = &"attack_right"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1murt"]
-animation = &"attack_right"
+animation = &"attack_left"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5sj0x"]
 animation = &"attack_up"
