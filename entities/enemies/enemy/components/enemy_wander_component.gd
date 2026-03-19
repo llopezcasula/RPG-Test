@@ -18,7 +18,7 @@ var current_mode: StringName = MODE_WANDER
 func setup(owner_enemy: Enemy, owner_navigation_component: EnemyNavigationComponent) -> void:
 	enemy = owner_enemy
 	navigation_component = owner_navigation_component
-	has_wander_origin = false
+	has_wander_origin = true
 	wander_origin = enemy.global_position
 	wander_target = enemy.global_position
 	reset()
@@ -77,7 +77,13 @@ func process_wander(delta: float) -> void:
 		enemy.movement_component.decelerate_to_stop(delta)
 		return
 
-	_follow_target(enemy.patrol_move_speed_scale, MODE_WANDER, wander_target, enemy.patrol_arrival_radius, enemy.patrol_slow_radius)
+	_follow_target(
+		enemy.patrol_move_speed_scale,
+		MODE_WANDER,
+		wander_target,
+		enemy.patrol_arrival_radius,
+		enemy.patrol_slow_radius
+	)
 
 func _process_return_home(delta: float) -> void:
 	var home_position := _get_home_position()
@@ -104,18 +110,26 @@ func _follow_target(speed_scale: float, mode: StringName, target_position: Vecto
 	wander_target = target_position
 	current_mode = mode
 	navigation_component._set_navigation_target(target_position)
-	navigation_component._follow_navigation(speed_scale, {
+
+	var steering_context := {
 		"mode": String(mode),
 		"fallback_target": target_position,
 		"interest_position": target_position,
 		"arrival_radius": arrival_radius,
 		"slow_radius": slow_radius,
-		"leash_center": _get_home_position(),
-		"leash_radius": enemy.patrol_radius,
-		"leash_strength": enemy.patrol_leash_strength,
 		"commit_strength": enemy.steering_commitment_strength,
 		"target_is_active": true
-	})
+	}
+
+	# Pass the patrol home position and radius so the steering layer can apply
+	# a context-steering edge bias (reduced interest for outward directions near
+	# the boundary). No leash force — only weight adjustments on the vectors.
+	steering_context["patrol_home"] = _get_home_position()
+	steering_context["patrol_radius"] = enemy.patrol_radius
+	steering_context["patrol_edge_bias_start"] = enemy.patrol_edge_bias_start
+	steering_context["patrol_edge_bias_strength"] = enemy.patrol_edge_bias_strength
+
+	navigation_component._follow_navigation(speed_scale, steering_context)
 
 func _should_return_home() -> bool:
 	if not has_wander_origin:

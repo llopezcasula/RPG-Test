@@ -40,7 +40,12 @@ enum State {
 @export var patrol_idle_time: Vector2 = Vector2(1.0, 2.0)
 @export var patrol_repath_distance: float = 8.0
 @export var patrol_snap_distance: float = 16.0
-@export var patrol_leash_strength: float = 1.35
+## How far into the patrol radius (0-1) the soft boundary weighting begins.
+## 0.0 = active everywhere, 1.0 = only exactly at the edge.
+@export_range(0.0, 1.0, 0.05) var patrol_edge_bias_start: float = 0.65
+## How strongly outward-pointing directions are down-weighted near the edge.
+## Higher = harder boundary. 0 disables the effect entirely.
+@export_range(0.0, 3.0, 0.05) var patrol_edge_bias_strength: float = 1.5
 @export var patrol_point_min_distance: float = 12.0
 @export var patrol_arrival_radius: float = 12.0
 @export var patrol_slow_radius: float = 36.0

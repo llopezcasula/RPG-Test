@@ -60,7 +60,12 @@ func _follow_navigation(speed_scale: float = 1.0, steering_context: Dictionary =
 	var move_speed: float = movement_component.get_move_speed()
 	navigation_agent.max_speed = move_speed * maxf(speed_scale, 0.0)
 
+	# Always prefer the explicit fallback_target from the context so we never
+	# accidentally steer toward the uninitialized (0,0) default of
+	# navigation_target_position before the first valid target is set.
 	var steering_target: Vector2 = steering_context.get("fallback_target", enemy.navigation_target_position)
+	if not steering_context.has("fallback_target") and not enemy.has_navigation_target:
+		return
 	if _can_use_navigation_path():
 		var next_path_position: Vector2 = navigation_agent.get_next_path_position()
 		if not navigation_agent.is_navigation_finished() and next_path_position.distance_squared_to(enemy.global_position) > 0.01:

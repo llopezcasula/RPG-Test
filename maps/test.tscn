@@ -1,23 +1,7 @@
-[gd_scene format=3 uid="uid://b8aavkjuv0mcw"]
+[gd_scene format=3 uid="uid://cxm1edxk4tcot"]
 
-[sub_resource type="NavigationPolygon" id="NavigationPolygon_test"]
-vertices = PackedVector2Array(-512, -384, 512, -384, 512, 384, -512, 384)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+[ext_resource type="PackedScene" uid="uid://caxbsm3e3tyth" path="res://entities/enemies/enemy/enemy.tscn" id="1_gyc4i"]
 
-[ext_resource type="PackedScene" uid="uid://dovovdd5paa6t" path="res://entities/player/player.tscn" id="1_5orm7"]
-[ext_resource type="PackedScene" uid="uid://caxbsm3e3tyth" path="res://entities/enemies/enemy/enemy.tscn" id="2_0jfhv"]
+[node name="Node2D" type="Node2D" unique_id=778939562]
 
-[node name="Test" type="Node2D" unique_id=89504471]
-
-[node name="GroundEffects" type="Node2D" parent="." unique_id=344363658]
-unique_name_in_owner = true
-
-[node name="Player" parent="." unique_id=2021335828 instance=ExtResource("1_5orm7")]
-
-[node name="Enemy" parent="." unique_id=856571659 instance=ExtResource("2_0jfhv")]
-position = Vector2(144, 2)
-
-[node name="Effects" type="Node2D" parent="." unique_id=81468619]
-
-[node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1942650706]
-navigation_polygon = SubResource("NavigationPolygon_test")
+[node name="Enemy" parent="." unique_id=2021335828 instance=ExtResource("1_gyc4i")]

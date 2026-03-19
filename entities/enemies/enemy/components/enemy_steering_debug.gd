@@ -60,4 +60,3 @@ func _draw() -> void:
 			var target_color := Color(0.3, 0.9, 1.0, 0.55) if wander_component.current_mode != EnemyWanderComponent.MODE_RETURN_HOME else Color(1.0, 0.75, 0.25, 0.65)
 			draw_circle(local_target, enemy.patrol_arrival_radius, Color(target_color.r, target_color.g, target_color.b, 0.18))
 			draw_arc(local_target, slow_radius, 0.0, TAU, 32, Color(target_color.r, target_color.g, target_color.b, 0.28), 1.0)
-			draw_line(Vector2.ZERO, local_target, target_color, 1.5)
