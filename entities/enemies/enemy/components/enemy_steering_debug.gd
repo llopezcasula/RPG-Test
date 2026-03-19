@@ -25,10 +25,6 @@ func _draw() -> void:
 	var interest := steering_component.last_interest
 	var danger := steering_component.last_danger
 	var final_weights := steering_component.last_final
-	var fallback_font: Font = ThemeDB.fallback_font
-	var font_size: int = ThemeDB.fallback_font_size
-	var text_offset := Vector2(0.0, -8.0)
-
 	for i in directions.size():
 		var direction: Vector2 = directions[i]
 		var end_point := direction * draw_radius
@@ -46,10 +42,6 @@ func _draw() -> void:
 			draw_line(Vector2.ZERO, final_end, Color(0.15, 0.85, 1.0, 0.95), 2.0)
 			draw_circle(final_end, 2.0, Color(0.15, 0.85, 1.0, 0.95))
 
-		if fallback_font != null and final_weights.size() == directions.size() and final_weights[i] > 0.0:
-			var desire_length := draw_radius * final_weights[i]
-			var label := enemy._snapped_weight_text(desire_length)
-			draw_string(fallback_font, final_end + text_offset, label, HORIZONTAL_ALIGNMENT_CENTER, -1.0, font_size, Color(0.95, 0.95, 0.95, 0.8))
 
 	if steering_component.last_steering != Vector2.ZERO:
 		draw_line(Vector2.ZERO, steering_component.last_steering * draw_radius, Color.GOLD, 3.0)

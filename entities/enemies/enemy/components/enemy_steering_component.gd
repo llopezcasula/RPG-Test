@@ -84,7 +84,11 @@ func _compute_interest(target_direction: Vector2, context: Dictionary) -> Packed
 		var direction: Vector2 = sample_directions[i]
 		var score := maxf(direction.dot(target_direction), 0.0)
 		if leash_direction != Vector2.ZERO and leash_strength > 0.0:
-			score += maxf(direction.dot(leash_direction), 0.0) * maxf(leash_ratio - 0.65, 0.0) * leash_strength
+			var return_bias := clampf(leash_ratio, 0.0, 1.0)
+			var inward_alignment := maxf(direction.dot(leash_direction), 0.0)
+			var outward_alignment := maxf(direction.dot(-leash_direction), 0.0)
+			score += inward_alignment * return_bias * leash_strength
+			score *= 1.0 - outward_alignment * return_bias
 		interest[i] = clampf(score, 0.0, 1.0)
 
 	return interest

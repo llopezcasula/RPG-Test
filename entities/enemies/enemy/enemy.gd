@@ -43,6 +43,7 @@ enum State {
 @export var patrol_leash_strength: float = 1.35
 @export var patrol_point_min_distance: float = 12.0
 @export var patrol_arrival_distance: float = 10.0
+@export var patrol_wander_duration: Vector2 = Vector2(1.25, 2.5)
 @export var patrol_turn_angle_range: Vector2 = Vector2(35.0, 85.0)
 @export var patrol_radius_step_ratio: float = 0.2
 
@@ -58,7 +59,6 @@ enum State {
 # Debug
 @export_category("Debug")
 @export var debug_patrol_vectors: bool = true
-@export var debug_weight_decimals: int = 2
 @export var steering_debug_radius: float = 56.0
 
 # Attack
@@ -72,6 +72,7 @@ var spawn_position: Vector2
 var facing_direction: Vector2 = Vector2.DOWN
 var patrol_target: Vector2
 var patrol_wait_time: float = 0.0
+var patrol_goal_time_remaining: float = 0.0
 var patrol_angle: float = 0.0
 var patrol_orbit_radius: float = 0.0
 var patrol_direction_sign: float = 1.0
@@ -123,6 +124,7 @@ func _ready() -> void:
 	patrol_angle = rng.randf_range(0.0, TAU)
 	patrol_orbit_radius = clampf(patrol_radius * rng.randf_range(0.45, 0.9), patrol_point_min_distance, patrol_radius)
 	patrol_direction_sign = -1.0 if rng.randf() < 0.5 else 1.0
+	patrol_goal_time_remaining = 0.0
 	patrol_target = spawn_position
 	navigation_target_position = spawn_position
 	update_animation()
@@ -225,8 +227,6 @@ func update_animation() -> void:
 		State.ATTACK:
 			animation_playback.travel("attack")
 
-func _snapped_weight_text(value: float) -> String:
-	return String.num(value, clampi(debug_weight_decimals, 0, 4))
 
 func _on_health_component_died() -> void:
 	state = State.DEAD
