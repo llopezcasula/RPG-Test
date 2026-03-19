@@ -17,7 +17,6 @@ class_name MovementComponent
 @export_node_path("Node") var stats_component_path: NodePath = ^"../StatsComponent"
 
 var move_direction: Vector2 = Vector2.ZERO
-var speed_multiplier: float = 1.0
 
 @onready var body: CharacterBody2D = _resolve_body()
 @onready var stats_component: StatsComponent = _resolve_stats_component()
@@ -37,7 +36,7 @@ func physics_update(delta: float) -> void:
 	var move_acceleration := _get_stat_value(acceleration_stat_id, acceleration)
 	var move_deceleration := _get_stat_value(deceleration_stat_id, deceleration)
 
-	var target_velocity: Vector2 = move_direction * move_speed * speed_multiplier
+	var target_velocity: Vector2 = move_direction * move_speed
 	var rate: float = move_acceleration if move_direction != Vector2.ZERO else move_deceleration
 	body.velocity = body.velocity.move_toward(target_velocity, rate * delta)
 	body.move_and_slide()
@@ -62,12 +61,8 @@ func set_move_direction(direction: Vector2) -> void:
 
 func stop_immediately() -> void:
 	move_direction = Vector2.ZERO
-	speed_multiplier = 1.0
 	if body != null:
 		body.velocity = Vector2.ZERO
-
-func set_speed_multiplier(multiplier: float) -> void:
-	speed_multiplier = maxf(multiplier, 0.0)
 
 func get_move_direction() -> Vector2:
 	return move_direction

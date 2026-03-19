@@ -20,7 +20,6 @@ enum State {
 @export var patrol_radius: float = 72.0
 @export var patrol_idle_time: Vector2 = Vector2(1.0, 2.0)
 @export var patrol_repath_distance: float = 8.0
-@export var enemy_group: StringName = &"enemy"
 
 var state: State = State.IDLE
 var spawn_position: Vector2
@@ -39,7 +38,6 @@ var hitbox_base_scale: Vector2
 @onready var stats_component: StatsComponent = $StatsComponent
 @onready var movement_component: MovementComponent = $MovementComponent
 @onready var combat_component: CombatComponent = $CombatComponent
-@onready var pursuit_component: EnemyPursuitComponent = $EnemyPursuitComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
@@ -51,7 +49,6 @@ func _ready() -> void:
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
 	rng.randomize()
-	add_to_group(enemy_group)
 	spawn_position = global_position
 	patrol_target = spawn_position
 	hitbox_base_position = hit_box.position
@@ -68,8 +65,6 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		movement_component.stop_immediately()
-		if pursuit_component != null:
-			pursuit_component.clear_path()
 		return
 
 	if attack_cooldown_remaining > 0.0:
@@ -122,40 +117,25 @@ func death() -> void:
 func _process_chase(delta: float) -> void:
 	if current_target == null:
 		movement_component.set_move_direction(Vector2.ZERO)
-		movement_component.set_speed_multiplier(1.0)
-		if pursuit_component != null:
-			pursuit_component.clear_path()
 		return
 
 	var to_target := current_target.global_position - global_position
 	var distance_to_target := to_target.length()
 	if distance_to_target <= 0.001:
 		movement_component.set_move_direction(Vector2.ZERO)
-		movement_component.set_speed_multiplier(1.0)
 		return
 
 	var direction := to_target / distance_to_target
-	if pursuit_component != null:
-		var steering := pursuit_component.get_steering(delta, current_target.global_position, true)
-		direction = steering.get("direction", direction)
-		movement_component.set_speed_multiplier(float(steering.get("speed_multiplier", 1.0)))
-	else:
-		movement_component.set_speed_multiplier(1.0)
-
-	# The pursuit component keeps a coarse path around walls, then blends in local
-	# separation so each skeleton can keep pressure without collapsing into one point.
 	_update_facing(direction)
 
-	if distance_to_target <= attack_range and _has_clear_attack_path():
+	if distance_to_target <= attack_range:
 		movement_component.set_move_direction(Vector2.ZERO)
-		movement_component.set_speed_multiplier(1.0)
 		if attack_cooldown_remaining <= 0.0 and state != State.ATTACK:
 			_start_attack(direction)
 		return
 
 	if state == State.ATTACK:
 		movement_component.decelerate_to_stop(delta)
-		movement_component.set_speed_multiplier(1.0)
 		return
 
 	movement_component.set_move_direction(direction)
@@ -163,26 +143,16 @@ func _process_chase(delta: float) -> void:
 func _process_patrol(delta: float) -> void:
 	if state == State.ATTACK:
 		movement_component.decelerate_to_stop(delta)
-		movement_component.set_speed_multiplier(1.0)
 		return
 
 	if global_position.distance_to(patrol_target) <= patrol_repath_distance:
 		movement_component.set_move_direction(Vector2.ZERO)
-		movement_component.set_speed_multiplier(1.0)
-		if pursuit_component != null:
-			pursuit_component.clear_path()
 		patrol_wait_time -= delta
 		if patrol_wait_time <= 0.0:
 			_pick_next_patrol_target()
 		return
 
 	var direction := (patrol_target - global_position).normalized()
-	if pursuit_component != null:
-		var steering := pursuit_component.get_steering(delta, patrol_target, false)
-		direction = steering.get("direction", direction)
-		movement_component.set_speed_multiplier(1.0)
-	else:
-		movement_component.set_speed_multiplier(1.0)
 	_update_facing(direction)
 	movement_component.set_move_direction(direction)
 
@@ -209,15 +179,6 @@ func _can_chase_target() -> bool:
 
 func _resolve_target() -> void:
 	current_target = get_tree().get_first_node_in_group(player_group) as CharacterBody2D
-
-func _has_clear_attack_path() -> bool:
-	if current_target == null:
-		return false
-
-	var query := PhysicsRayQueryParameters2D.create(global_position, current_target.global_position)
-	query.exclude = [self]
-	var hit := get_world_2d().direct_space_state.intersect_ray(query)
-	return hit.is_empty() or hit.get("collider") == current_target
 
 func _start_attack(direction: Vector2) -> void:
 	state = State.ATTACK
@@ -313,9 +274,6 @@ func set_attack_hitbox_enabled(enabled: bool) -> void:
 func _on_health_component_died() -> void:
 	state = State.DEAD
 	movement_component.stop_immediately()
-	if pursuit_component != null:
-		pursuit_component.clear_path()
-	remove_from_group(enemy_group)
 	set_attack_hitbox_enabled(false)
 	velocity = Vector2.ZERO
 	death()
