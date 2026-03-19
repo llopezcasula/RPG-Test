@@ -1,11 +1,11 @@
 extends Node
 class_name EnemyNavigationComponent
 
-var enemy
+var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_agent: NavigationAgent2D
 
-func setup(owner_enemy, owner_movement_component: MovementComponent, owner_navigation_agent: NavigationAgent2D) -> void:
+func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_agent: NavigationAgent2D) -> void:
 	enemy = owner_enemy
 	movement_component = owner_movement_component
 	navigation_agent = owner_navigation_agent
@@ -23,8 +23,8 @@ func _configure_navigation_agent() -> void:
 		navigation_agent.velocity_computed.connect(_on_navigation_agent_velocity_computed)
 
 func _set_navigation_target(requested_position: Vector2, force_repath: bool = false) -> void:
-	var next_target := _get_closest_navigation_point(requested_position)
-	var should_repath := force_repath
+	var next_target: Vector2 = _get_closest_navigation_point(requested_position)
+	var should_repath: bool = force_repath
 	should_repath = should_repath or not enemy.has_navigation_target
 	should_repath = should_repath or enemy.navigation_repath_remaining <= 0.0
 	should_repath = should_repath or enemy.navigation_target_position.distance_to(next_target) >= enemy.target_refresh_distance
@@ -46,7 +46,7 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 
 	# Godot 4 expects get_next_path_position() during physics so the internal
 	# path state advances correctly as the agent moves between corners.
-	var next_path_position := navigation_agent.get_next_path_position()
+	var next_path_position: Vector2 = navigation_agent.get_next_path_position()
 	if navigation_agent.is_navigation_finished():
 		enemy._clear_navigation_motion()
 		return
@@ -66,7 +66,7 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 		applied_velocity = desired_velocity
 
 	enemy._update_facing(applied_velocity.normalized())
-	var move_speed := maxf(movement_component.get_move_speed(), 0.001)
+	var move_speed: float = maxf(movement_component.get_move_speed(), 0.001)
 	movement_component.set_move_direction(applied_velocity / move_speed)
 
 func _stop_navigation() -> void:
@@ -74,7 +74,7 @@ func _stop_navigation() -> void:
 	enemy._clear_navigation_motion()
 
 func _get_closest_navigation_point(requested_position: Vector2) -> Vector2:
-	var navigation_map := navigation_agent.get_navigation_map()
+	var navigation_map: RID = navigation_agent.get_navigation_map()
 	if navigation_map.is_valid():
 		return NavigationServer2D.map_get_closest_point(navigation_map, requested_position)
 	return requested_position
