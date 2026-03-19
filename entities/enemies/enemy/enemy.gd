@@ -25,6 +25,14 @@ enum State {
 @export var path_desired_distance: float = 12.0
 @export var target_desired_distance: float = 18.0
 
+# Avoidance tuning
+@export_category("Avoidance")
+@export var avoidance_enabled: bool = true
+@export var avoidance_radius: float = 18.0
+@export var avoidance_neighbor_distance: float = 96.0
+@export var avoidance_max_neighbors: int = 8
+@export var avoidance_time_horizon: float = 0.8
+
 # Attack tuning
 @export_category("Attack")
 @export_range(0.0, 1.0, 0.01) var attack_windup_ratio: float = 0.4
