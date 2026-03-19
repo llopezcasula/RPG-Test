@@ -13,28 +13,39 @@ enum State {
 @export var deceleration: float = 2200.0
 @export var attack_speed: float = 0.6
 @export var attack_damage: int = 60
+@export var debug_hitbox: bool = true
 
 var state: State = State.IDLE
 var move_direction: Vector2 = Vector2.ZERO
+var hitbox_base_position: Vector2
+var hitbox_base_rotation: float
 
 @onready var animation_tree: AnimationTree = $AnimationTree
-@onready var animation_playback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
+@onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
+@onready var sprite: Sprite2D = $Sprite2D
 @onready var hit_box: Area2D = $HitBox
 @onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
-
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
+
+	hitbox_base_position = hit_box.position
+	hitbox_base_rotation = hit_box.rotation
+
 	set_attack_hitbox_enabled(false)
 	update_animation()
 
+	if debug_hitbox:
+		print("base hitbox position: ", hitbox_base_position)
+		print("base hitbox rotation: ", rad_to_deg(hitbox_base_rotation))
+		print("shape local position: ", hit_box_shape.position)
+		print("shape local rotation: ", rad_to_deg(hit_box_shape.rotation))
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		attack()
-
 
 func _physics_process(delta: float) -> void:
 	if state == State.ATTACK:
@@ -43,7 +54,6 @@ func _physics_process(delta: float) -> void:
 		return
 
 	movement_loop(delta)
-
 
 func movement_loop(delta: float) -> void:
 	move_direction = Input.get_vector("left", "right", "up", "down")
@@ -55,9 +65,9 @@ func movement_loop(delta: float) -> void:
 
 	if state == State.IDLE or state == State.RUN:
 		if move_direction.x < -0.01:
-			$Sprite2D.flip_h = true
+			sprite.flip_h = true
 		elif move_direction.x > 0.01:
-			$Sprite2D.flip_h = false
+			sprite.flip_h = false
 
 	if move_direction != Vector2.ZERO:
 		if state != State.RUN:
@@ -69,7 +79,6 @@ func movement_loop(delta: float) -> void:
 			state = State.IDLE
 			update_animation()
 
-
 func update_animation() -> void:
 	match state:
 		State.IDLE:
@@ -79,29 +88,51 @@ func update_animation() -> void:
 		State.ATTACK:
 			animation_playback.travel("attack")
 
-
 func attack() -> void:
 	if state == State.ATTACK:
 		return
+
 	state = State.ATTACK
 	set_attack_hitbox_enabled(true)
 
 	var mouse_pos: Vector2 = get_global_mouse_position()
 	var attack_dir: Vector2 = (mouse_pos - global_position).normalized()
-	$Sprite2D.flip_h = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
+
+	var facing_left: bool = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
+	sprite.flip_h = facing_left
+
+	# Reset to base first
+	hit_box.position = hitbox_base_position
+	hit_box.rotation = hitbox_base_rotation
+
+	# Mirror hitbox for left-facing horizontal attacks
+	if facing_left:
+		hit_box.position = Vector2(-hitbox_base_position.x, hitbox_base_position.y)
+		hit_box.rotation = -hitbox_base_rotation
+
+	if debug_hitbox:
+		print("facing_left: ", facing_left)
+		print("attack_dir: ", attack_dir)
+		print("hitbox local position: ", hit_box.position)
+		print("hitbox global position: ", hit_box.global_position)
+		print("hitbox rotation deg: ", rad_to_deg(hit_box.rotation))
+
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
 	update_animation()
 
 	await get_tree().create_timer(attack_speed).timeout
+
 	set_attack_hitbox_enabled(false)
+	hit_box.position = hitbox_base_position
+	hit_box.rotation = hitbox_base_rotation
+
 	state = State.IDLE
 	update_animation()
-
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
 	hit_box_shape.disabled = not enabled
 
-
 func _on_hit_box_area_entered(area: Area2D) -> void:
-	area.owner.take_damage(attack_damage)
+	if area.owner != null and area.owner.has_method("take_damage"):
+		area.owner.take_damage(attack_damage)

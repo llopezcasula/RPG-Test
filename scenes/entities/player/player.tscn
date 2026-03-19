@@ -61,6 +61,30 @@ tracks/0/keys = {
 "update": 1,
 "values": [24, 25, 26, 27, 28, 29]
 }
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("HitBox:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.14722268, 0.30084634),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(29, -48.000004), Vector2(28, -11.000002), Vector2(-18, -13)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HitBox:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.14722268, 0.30084634),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [0.0, 2.4661503, 4.29351]
+}
 
 [sub_resource type="Animation" id="Animation_bjvvg"]
 resource_name = "attack_right"
@@ -118,6 +142,30 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
 "values": [36, 37, 38, 39, 40, 41]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("HitBox:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 0.099855386, 0.40006164),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [Vector2(-38, -28), Vector2(-39, -17), Vector2(40.000004, -37)]
+}
+tracks/2/type = "value"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath("HitBox:rotation")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0, 0.099855386, 0.40006164),
+"transitions": PackedFloat32Array(1, 1, 1),
+"update": 0,
+"values": [-1.850049, -2.0071287, 1.0995574]
 }
 
 [sub_resource type="Animation" id="Animation_635qg"]
@@ -235,6 +283,11 @@ size = Vector2(10, 46)
 
 [node name="Player" type="CharacterBody2D" unique_id=2021335828]
 script = ExtResource("1_635qg")
+speed = null
+acceleration = null
+deceleration = null
+attack_speed = null
+attack_damage = null
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)
