@@ -3,7 +3,8 @@ class_name Enemy
 
 enum State {
 	IDLE,
-	MOVE,
+	CHASE,
+	ATTACK,
 	DEAD
 }
 
@@ -11,12 +12,16 @@ enum State {
 @export_category("Scene References")
 @export var death_packed: PackedScene
 
+# AI tuning
+@export_category("AI")
+@export var player_group: StringName = &"player"
+@export var detection_radius: float = 240.0
+@export var disengage_radius: float = 320.0
+
 # Navigation tuning
 @export_category("Navigation")
 @export var path_desired_distance: float = 12.0
 @export var target_desired_distance: float = 18.0
-@export var manual_navigation_enabled: bool = false
-@export var manual_target_position: Vector2 = Vector2.ZERO
 
 # Attack tuning
 @export_category("Attack")
@@ -34,6 +39,7 @@ var attack_cooldown_remaining: float = 0.0
 @onready var combat_component: CombatComponent = $CombatComponent
 @onready var attack_component: EnemyAttackComponent = $EnemyAttackComponent
 @onready var navigation_agent: NavigationAgent2D = $NavigationAgent2D
+@onready var ai_component: EnemyAIComponent = $EnemyAIComponent
 @onready var navigation_component: EnemyNavigationComponent = $EnemyNavigationComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
@@ -45,14 +51,12 @@ func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	animation_tree.active = true
 
+	ai_component.setup(self, navigation_component)
 	navigation_component.setup(self, movement_component, navigation_agent)
 	navigation_component.configure_agent()
 	attack_component.setup(self, combat_component, hit_box, hit_box_shape)
 	attack_component.set_attack_hitbox_enabled(false)
 	update_animation()
-
-	if manual_navigation_enabled:
-		navigation_component.set_target_position(manual_target_position, true)
 
 	if attack_component.attack_finished.is_connected(_on_attack_finished) == false:
 		attack_component.attack_finished.connect(_on_attack_finished)
@@ -70,13 +74,9 @@ func _physics_process(delta: float) -> void:
 	if attack_cooldown_remaining > 0.0:
 		attack_cooldown_remaining = maxf(attack_cooldown_remaining - delta, 0.0)
 
-	if manual_navigation_enabled:
-		navigation_component.move_to_target(delta)
-	else:
-		navigation_component.stop()
-
+	ai_component.process_ai(delta)
 	movement_component.physics_update(delta)
-	_update_state_from_velocity()
+	_update_facing_from_velocity()
 
 func take_damage(damage_taken: float, source: Node = null) -> float:
 	if combat_component != null:
@@ -130,21 +130,18 @@ func update_animation() -> void:
 	match state:
 		State.IDLE:
 			animation_playback.travel("idle")
-		State.MOVE:
+		State.CHASE:
 			animation_playback.travel("run")
+		State.ATTACK:
+			animation_playback.travel("attack")
 		State.DEAD:
 			animation_playback.travel("idle")
 
-func _update_state_from_velocity() -> void:
-	if state == State.DEAD:
+func _update_facing_from_velocity() -> void:
+	if state == State.DEAD or velocity.length_squared() <= 1.0:
 		return
 
-	if velocity.length_squared() > 1.0:
-		update_facing(velocity.normalized())
-		set_state(State.MOVE)
-		return
-
-	set_state(State.IDLE)
+	update_facing(velocity.normalized())
 
 func _on_attack_finished() -> void:
 	if state != State.DEAD:
