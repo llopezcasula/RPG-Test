@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="StatLoadout" load_steps=5 format=3]
+[gd_resource type="Resource" script_class="StatLoadout" format=3 uid="uid://2sq3niu7s04y"]
 
-[ext_resource type="Script" path="res://systems/stats/data/stat_loadout.gd" id="1_loadout"]
-[ext_resource type="Script" path="res://systems/stats/data/stat.gd" id="2_stat"]
+[ext_resource type="Script" uid="uid://bbvw28odrv7pa" path="res://systems/stats/data/stat_loadout.gd" id="1_loadout"]
+[ext_resource type="Script" uid="uid://8fgtixlwoqbf" path="res://systems/stats/data/stat.gd" id="2_stat"]
+[ext_resource type="Script" uid="uid://df8w5pyf0g4xv" path="res://systems/stats/data/stat_modifier.gd" id="3_pcslq"]
 
 [sub_resource type="Resource" id="Stat_enemy_max_health"]
 script = ExtResource("2_stat")
@@ -20,4 +21,4 @@ base_value = 8.0
 
 [resource]
 script = ExtResource("1_loadout")
-stats = [SubResource("Stat_enemy_max_health"), SubResource("Stat_enemy_attack"), SubResource("Stat_enemy_defense")]
+stats = Array[ExtResource("2_stat")]([SubResource("Stat_enemy_max_health"), SubResource("Stat_enemy_attack"), SubResource("Stat_enemy_defense")])

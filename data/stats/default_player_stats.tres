@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="StatLoadout" load_steps=9 format=3]
+[gd_resource type="Resource" script_class="StatLoadout" format=3 uid="uid://naxd335u5jt3"]
 
-[ext_resource type="Script" path="res://systems/stats/data/stat_loadout.gd" id="1_loadout"]
-[ext_resource type="Script" path="res://systems/stats/data/stat.gd" id="2_stat"]
+[ext_resource type="Script" uid="uid://bbvw28odrv7pa" path="res://systems/stats/data/stat_loadout.gd" id="1_loadout"]
+[ext_resource type="Script" uid="uid://8fgtixlwoqbf" path="res://systems/stats/data/stat.gd" id="2_stat"]
+[ext_resource type="Script" uid="uid://df8w5pyf0g4xv" path="res://systems/stats/data/stat_modifier.gd" id="3_w3p3m"]
 
 [sub_resource type="Resource" id="Stat_player_max_health"]
 script = ExtResource("2_stat")
@@ -40,4 +41,4 @@ base_value = 0.15
 
 [resource]
 script = ExtResource("1_loadout")
-stats = [SubResource("Stat_player_max_health"), SubResource("Stat_player_move_speed"), SubResource("Stat_player_acceleration"), SubResource("Stat_player_deceleration"), SubResource("Stat_player_attack_speed"), SubResource("Stat_player_attack"), SubResource("Stat_player_crit_chance")]
+stats = Array[ExtResource("2_stat")]([SubResource("Stat_player_max_health"), SubResource("Stat_player_move_speed"), SubResource("Stat_player_acceleration"), SubResource("Stat_player_deceleration"), SubResource("Stat_player_attack_speed"), SubResource("Stat_player_attack"), SubResource("Stat_player_crit_chance")])
