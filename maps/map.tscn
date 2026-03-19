@@ -8,7 +8,7 @@
 [ext_resource type="TileSet" uid="uid://57axrqs3jre0" path="res://resources/tilesets/Props.tres" id="7_aewf8"]
 [ext_resource type="TileSet" uid="uid://d37nd15qn24qp" path="res://resources/tilesets/Trees.tres" id="8_lwbun"]
 [ext_resource type="Texture2D" uid="uid://irsjdqw3whoa" path="res://assets/environment/props/clouds/Clouds_01.png" id="10_314gp"]
-[ext_resource type="PackedScene" uid="uid://caxbsm3e3tyth" path="res://scenes/entities/enemies/enemy.tscn" id="10_sl3ds"]
+[ext_resource type="PackedScene" uid="uid://caxbsm3e3tyth" path="res://entities/enemies/enemy/enemy.tscn" id="10_sl3ds"]
 [ext_resource type="Texture2D" uid="uid://disg1nb86v6dw" path="res://assets/environment/props/clouds/Clouds_02.png" id="11_sl3ds"]
 [ext_resource type="Texture2D" uid="uid://mkdfape8o7vf" path="res://assets/environment/props/clouds/Clouds_03.png" id="12_elicj"]
 [ext_resource type="Texture2D" uid="uid://cpeeb2764qtmr" path="res://assets/environment/props/clouds/Clouds_04.png" id="13_x7wiq"]
@@ -16,8 +16,8 @@
 [ext_resource type="Texture2D" uid="uid://ilaec6fjg6t7" path="res://assets/environment/props/clouds/Clouds_06.png" id="15_ipjqn"]
 [ext_resource type="Texture2D" uid="uid://b6g0obsr8w4y5" path="res://assets/environment/props/clouds/Clouds_07.png" id="16_5lkus"]
 [ext_resource type="Texture2D" uid="uid://deh463gc1k86w" path="res://assets/environment/props/clouds/Clouds_08.png" id="17_og705"]
-[ext_resource type="PackedScene" uid="uid://dovovdd5paa6t" path="res://scenes/entities/player/player.tscn" id="19_1bu5d"]
-[ext_resource type="Script" uid="uid://bauosr6qi0k7a" path="res://scenes/maps/map.gd" id="20_map_script"]
+[ext_resource type="PackedScene" uid="uid://dovovdd5paa6t" path="res://entities/player/player.tscn" id="19_1bu5d"]
+[ext_resource type="Script" uid="uid://bauosr6qi0k7a" path="res://maps/map.gd" id="20_map_script"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8sm8m"]
 texture = ExtResource("1_elicj")
