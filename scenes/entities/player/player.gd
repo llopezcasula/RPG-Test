@@ -54,6 +54,7 @@ func _physics_process(delta: float) -> void:
 	if state == State.ATTACK:
 		velocity = velocity.move_toward(Vector2.ZERO, deceleration * delta)
 		move_and_slide()
+		sync_attack_hitbox_transform()
 		return
 
 	movement_loop(delta)
