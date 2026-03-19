@@ -9,6 +9,7 @@
 [ext_resource type="Script" uid="uid://d3e3a4g1vqg3s" path="res://systems/stats/components/combat_component.gd" id="6_combat"]
 [ext_resource type="Script" uid="uid://dauorll13gf7e" path="res://systems/stats/components/buff_component.gd" id="7_buff"]
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://systems/stats/components/movement_component.gd" id="8_move"]
+[ext_resource type="Script" path="res://systems/ai/components/enemy_pursuit_component.gd" id="9_pursuit"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
@@ -354,6 +355,9 @@ script = ExtResource("8_move")
 speed = 140.0
 acceleration = 900.0
 deceleration = 1400.0
+
+[node name="EnemyPursuitComponent" type="Node" parent="." unique_id=1922204101]
+script = ExtResource("9_pursuit")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)
