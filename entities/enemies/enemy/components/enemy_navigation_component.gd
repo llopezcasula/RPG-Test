@@ -23,7 +23,11 @@ func _configure_navigation_agent() -> void:
 		navigation_agent.velocity_computed.connect(_on_navigation_agent_velocity_computed)
 
 func _set_navigation_target(requested_position: Vector2, force_repath: bool = false) -> void:
-	var next_target: Vector2 = _get_closest_navigation_point(requested_position)
+	var next_target: Vector2 = requested_position
+	var navigation_path: PackedVector2Array = _get_navigation_path_to(requested_position)
+	if navigation_path.size() > 0:
+		next_target = _get_closest_navigation_point(requested_position)
+
 	var should_repath: bool = force_repath
 	should_repath = should_repath or not enemy.has_navigation_target
 	should_repath = should_repath or enemy.navigation_repath_remaining <= 0.0
@@ -42,7 +46,16 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 		movement_component.set_move_direction(Vector2.ZERO)
 		return
 
-	navigation_agent.max_speed = movement_component.get_move_speed() * maxf(speed_scale, 0.0)
+	var move_speed: float = movement_component.get_move_speed()
+	navigation_agent.max_speed = move_speed * maxf(speed_scale, 0.0)
+
+	# If the current scene has no baked NavigationRegion2D (for example the
+	# lightweight test scene), the agent still exists but never returns a usable
+	# path. Fall back to direct steering so enemies can still chase instead of
+	# standing still until the player enters attack range.
+	if not _can_use_navigation_path():
+		_follow_directly(enemy.navigation_target_position)
+		return
 
 	# Godot 4 expects get_next_path_position() during physics so the internal
 	# path state advances correctly as the agent moves between corners.
@@ -53,21 +66,11 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 
 	var to_next_point: Vector2 = next_path_position - enemy.global_position
 	if to_next_point.length_squared() <= 0.01:
-		enemy._clear_navigation_motion()
+		_follow_directly(enemy.navigation_target_position)
 		return
 
 	var desired_velocity: Vector2 = to_next_point.normalized() * navigation_agent.max_speed
-	navigation_agent.velocity = desired_velocity
-
-	# Local avoidance still runs through NavigationAgent2D; the main enemy body
-	# only receives the final movement direction after the safe velocity is chosen.
-	var applied_velocity: Vector2 = enemy.safe_navigation_velocity if navigation_agent.avoidance_enabled else desired_velocity
-	if applied_velocity == Vector2.ZERO:
-		applied_velocity = desired_velocity
-
-	enemy._update_facing(applied_velocity.normalized())
-	var move_speed: float = maxf(movement_component.get_move_speed(), 0.001)
-	movement_component.set_move_direction(applied_velocity / move_speed)
+	_apply_navigation_velocity(desired_velocity)
 
 func _stop_navigation() -> void:
 	enemy.has_navigation_target = false
@@ -81,3 +84,38 @@ func _get_closest_navigation_point(requested_position: Vector2) -> Vector2:
 
 func _on_navigation_agent_velocity_computed(safe_velocity: Vector2) -> void:
 	enemy.safe_navigation_velocity = safe_velocity
+
+
+func _can_use_navigation_path() -> bool:
+	var navigation_path: PackedVector2Array = navigation_agent.get_current_navigation_path()
+	if navigation_path.size() > 1:
+		return true
+	return navigation_agent.is_target_reachable()
+
+func _get_navigation_path_to(target_position: Vector2) -> PackedVector2Array:
+	var navigation_map: RID = navigation_agent.get_navigation_map()
+	if not navigation_map.is_valid():
+		return PackedVector2Array()
+	return NavigationServer2D.map_get_path(navigation_map, enemy.global_position, target_position, true)
+
+func _follow_directly(target_position: Vector2) -> void:
+	var to_target: Vector2 = target_position - enemy.global_position
+	if to_target.length_squared() <= 0.01:
+		enemy._clear_navigation_motion()
+		return
+
+	var desired_velocity: Vector2 = to_target.normalized() * navigation_agent.max_speed
+	_apply_navigation_velocity(desired_velocity)
+
+func _apply_navigation_velocity(desired_velocity: Vector2) -> void:
+	navigation_agent.velocity = desired_velocity
+
+	# Local avoidance still runs through NavigationAgent2D when it has a valid
+	# navigation solution; otherwise the enemy just uses the desired velocity.
+	var applied_velocity: Vector2 = enemy.safe_navigation_velocity if navigation_agent.avoidance_enabled else desired_velocity
+	if applied_velocity == Vector2.ZERO:
+		applied_velocity = desired_velocity
+
+	enemy._update_facing(applied_velocity.normalized())
+	var move_speed: float = maxf(movement_component.get_move_speed(), 0.001)
+	movement_component.set_move_direction(applied_velocity / move_speed)
