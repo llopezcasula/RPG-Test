@@ -4,18 +4,22 @@ extends CharacterBody2D
 @export var death_packed: PackedScene
 
 @onready var stats_component: StatsComponent = $StatsComponent
+@onready var combat_component: CombatComponent = $CombatComponent
 
 func _ready() -> void:
 	var health_component := get_health_component()
 	if health_component != null:
 		health_component.died.connect(_on_health_component_died)
 
-func take_damage(damage_taken: float) -> void:
+func take_damage(damage_taken: float, source: Node = null) -> float:
+	if combat_component != null:
+		return combat_component.take_damage(damage_taken, source)
+
 	var health_component := get_health_component()
 	if health_component == null:
-		return
+		return 0.0
 
-	health_component.take_damage(damage_taken)
+	return health_component.take_damage(damage_taken)
 
 func get_health_component() -> HealthComponent:
 	if stats_component == null:

@@ -2,11 +2,9 @@ extends Node
 class_name MovementComponent
 
 @export_category("Movement")
-# These ids let the component read movement tuning from StatsComponent.
-# If a stat is missing, the fallback value is used instead.
-@export var move_speed_stat_id: StringName = &"move_speed"
-@export var acceleration_stat_id: StringName = &"acceleration"
-@export var deceleration_stat_id: StringName = &"deceleration"
+@export var move_speed_stat_id: StringName = StatsIds.MOVE_SPEED
+@export var acceleration_stat_id: StringName = StatsIds.ACCELERATION
+@export var deceleration_stat_id: StringName = StatsIds.DECELERATION
 @export var speed: float = 260.0
 @export var acceleration: float = 1800.0
 @export var deceleration: float = 2200.0

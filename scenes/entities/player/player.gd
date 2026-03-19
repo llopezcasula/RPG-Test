@@ -1,10 +1,5 @@
 extends CharacterBody2D
 
-# Example entity usage:
-# - data lives in StatsComponent as reusable Stat resources
-# - behavior reads from stat ids, so adding a new stat later is usually data-only
-#   until some component decides to use it
-
 enum State {
 	IDLE,
 	RUN,
@@ -13,10 +8,6 @@ enum State {
 }
 
 @export_category("Combat")
-@export var attack_speed_stat_id: StringName = &"attack_speed"
-@export var attack_damage_stat_id: StringName = &"attack"
-@export var fallback_attack_speed: float = 0.6
-@export var fallback_attack_damage: float = 60.0
 @export var debug_hitbox: bool = true
 
 var state: State = State.IDLE
@@ -26,6 +17,7 @@ var hitbox_base_scale: Vector2
 
 @onready var stats_component: StatsComponent = $StatsComponent
 @onready var movement_component: MovementComponent = $MovementComponent
+@onready var combat_component: CombatComponent = $CombatComponent
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
@@ -113,7 +105,6 @@ func attack() -> void:
 
 	sprite.flip_h = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
 
-	# Reset to base first before the animation applies its current frame.
 	hit_box.position = hitbox_base_position
 	hit_box.rotation = hitbox_base_rotation
 	hit_box.scale = hitbox_base_scale
@@ -140,12 +131,15 @@ func attack() -> void:
 	state = State.IDLE
 	update_animation()
 
-func take_damage(damage_taken: float) -> void:
+func take_damage(damage_taken: float, source: Node = null) -> float:
+	if combat_component != null:
+		return combat_component.take_damage(damage_taken, source)
+
 	var health_component := get_health_component()
 	if health_component == null:
-		return
+		return 0.0
 
-	health_component.take_damage(damage_taken)
+	return health_component.take_damage(damage_taken)
 
 func get_health_component() -> HealthComponent:
 	if stats_component == null:
@@ -153,14 +147,9 @@ func get_health_component() -> HealthComponent:
 	return stats_component.get_node_or_null("HealthComponent") as HealthComponent
 
 func get_attack_speed() -> float:
-	if stats_component == null:
-		return fallback_attack_speed
-	return stats_component.get_stat_value(attack_speed_stat_id, fallback_attack_speed)
-
-func get_attack_damage() -> float:
-	if stats_component == null:
-		return fallback_attack_damage
-	return stats_component.get_stat_value(attack_damage_stat_id, fallback_attack_damage)
+	if combat_component == null:
+		return 0.6
+	return combat_component.get_attack_speed()
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
@@ -173,5 +162,7 @@ func _on_health_component_died() -> void:
 	velocity = Vector2.ZERO
 
 func _on_hit_box_area_entered(area: Area2D) -> void:
-	if area.owner != null and area.owner.has_method("take_damage"):
-		area.owner.take_damage(get_attack_damage())
+	if combat_component == null:
+		return
+	if area.owner != null:
+		combat_component.attack_target(area.owner)
