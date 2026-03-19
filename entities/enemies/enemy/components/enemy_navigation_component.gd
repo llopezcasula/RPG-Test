@@ -51,17 +51,17 @@ func _follow_navigation(speed_scale: float = 1.0) -> void:
 		enemy._clear_navigation_motion()
 		return
 
-	var to_next_point := next_path_position - enemy.global_position
+	var to_next_point: Vector2 = next_path_position - enemy.global_position
 	if to_next_point.length_squared() <= 0.01:
 		enemy._clear_navigation_motion()
 		return
 
-	var desired_velocity := to_next_point.normalized() * navigation_agent.max_speed
+	var desired_velocity: Vector2 = to_next_point.normalized() * navigation_agent.max_speed
 	navigation_agent.velocity = desired_velocity
 
 	# Local avoidance still runs through NavigationAgent2D; the main enemy body
 	# only receives the final movement direction after the safe velocity is chosen.
-	var applied_velocity := enemy.safe_navigation_velocity if navigation_agent.avoidance_enabled else desired_velocity
+	var applied_velocity: Vector2 = enemy.safe_navigation_velocity if navigation_agent.avoidance_enabled else desired_velocity
 	if applied_velocity == Vector2.ZERO:
 		applied_velocity = desired_velocity
 
