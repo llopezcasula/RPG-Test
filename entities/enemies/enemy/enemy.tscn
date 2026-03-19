@@ -11,6 +11,8 @@
 [ext_resource type="Script" uid="uid://djpqqtyvm1fkg" path="res://entities/enemies/enemy/components/enemy_attack_component.gd" id="7_attack"]
 [ext_resource type="Script" uid="uid://dauorll13gf7e" path="res://systems/stats/components/buff_component.gd" id="7_buff"]
 [ext_resource type="Script" uid="uid://dvye63nnp3bta" path="res://entities/enemies/enemy/components/enemy_navigation_component.gd" id="7_nav"]
+[ext_resource type="Script" path="res://entities/enemies/enemy/components/enemy_steering_component.gd" id="7_steer"]
+[ext_resource type="Script" path="res://entities/enemies/enemy/components/enemy_steering_debug.gd" id="7_debug"]
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://systems/stats/components/movement_component.gd" id="8_move"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
@@ -365,6 +367,13 @@ script = ExtResource("3_ai")
 
 [node name="EnemyNavigationComponent" type="Node" parent="." unique_id=815443870]
 script = ExtResource("7_nav")
+
+[node name="EnemySteeringComponent" type="Node" parent="." unique_id=1099013370]
+script = ExtResource("7_steer")
+
+[node name="EnemySteeringDebug" type="Node2D" parent="." unique_id=189567233]
+script = ExtResource("7_debug")
+z_index = 10
 
 [node name="EnemyAttackComponent" type="Node" parent="." unique_id=1740339843]
 script = ExtResource("7_attack")
