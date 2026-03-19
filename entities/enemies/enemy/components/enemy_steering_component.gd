@@ -120,9 +120,11 @@ func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 func _combine_weights(interest: PackedFloat32Array, danger: PackedFloat32Array, context: Dictionary) -> PackedFloat32Array:
 	var final_weights := _make_empty_weights()
 	var dead_zone: float = clampf(float(context.get("dead_zone", enemy.steering_dead_zone)), 0.0, 1.0)
+	var interest_weight: float = maxf(float(context.get("interest_weight", enemy.steering_interest_strength)), 0.0)
+	var danger_weight: float = maxf(float(context.get("danger_weight", enemy.steering_danger_strength)), 0.0)
 
 	for i in sample_directions.size():
-		var raw_weight := interest[i] * enemy.steering_interest_strength - danger[i] * enemy.steering_danger_strength
+		var raw_weight := interest[i] * interest_weight - danger[i] * danger_weight
 		final_weights[i] = 0.0 if raw_weight <= dead_zone else clampf(raw_weight, 0.0, 1.0)
 
 	return final_weights
@@ -130,18 +132,41 @@ func _combine_weights(interest: PackedFloat32Array, danger: PackedFloat32Array, 
 func _build_steering_vector(weights: PackedFloat32Array) -> Vector2:
 	var weighted_sum := Vector2.ZERO
 	var weight_total := 0.0
+	var best_index := -1
+	var best_weight := 0.0
 
 	for i in sample_directions.size():
 		var weight := weights[i]
 		if weight <= 0.0:
 			continue
+
 		weighted_sum += sample_directions[i] * weight
 		weight_total += weight
 
-	if weighted_sum.length_squared() <= 0.0001 or weight_total <= 0.0001:
+		if best_index == -1 or weight > best_weight:
+			best_index = i
+			best_weight = weight
+
+	if best_index == -1 or best_weight <= 0.0:
 		return Vector2.ZERO
 
-	return (weighted_sum / weight_total).limit_length(1.0)
+	var dominant_vector := sample_directions[best_index] * best_weight
+	var neighbor_influence := clampf(enemy.steering_neighbor_direction_influence, 0.0, 1.0)
+	if neighbor_influence > 0.0 and sample_directions.size() > 2:
+		for offset in [-1, 1]:
+			var neighbor_index := wrapi(best_index + offset, 0, sample_directions.size())
+			dominant_vector += sample_directions[neighbor_index] * weights[neighbor_index] * neighbor_influence
+
+	var dominant_direction := dominant_vector.normalized() if dominant_vector.length_squared() > 0.0001 else sample_directions[best_index]
+	if weighted_sum.length_squared() <= 0.0001 or weight_total <= 0.0001:
+		return dominant_direction
+
+	var averaged_direction := (weighted_sum / weight_total).normalized()
+	var blend_to_average := 1.0 - clampf(enemy.steering_dominant_direction_blend, 0.0, 1.0)
+	if averaged_direction == Vector2.ZERO:
+		return dominant_direction
+
+	return dominant_direction.lerp(averaged_direction, blend_to_average).normalized()
 
 func _smooth_steering(new_steering: Vector2) -> Vector2:
 	var smooth_weight := clampf(enemy.steering_smoothing, 0.0, 1.0)

@@ -3,6 +3,7 @@ class_name EnemyWanderComponent
 
 const MODE_IDLE := &"idle"
 const MODE_WANDER := &"wander"
+const MODE_RETURN := &"return"
 
 var enemy: Enemy
 var navigation_component: EnemyNavigationComponent
@@ -39,6 +40,20 @@ func stop() -> void:
 	if navigation_component != null:
 		navigation_component._stop_navigation()
 
+func begin_return_to_origin() -> void:
+	if enemy == null:
+		return
+
+	var home_position := _get_home_position()
+	if enemy.global_position.distance_to(home_position) <= enemy.patrol_arrival_radius:
+		reset()
+		return
+
+	has_wander_target = true
+	wander_target = home_position
+	current_mode = MODE_RETURN
+	state_time_remaining = 0.0
+
 func process_wander(delta: float) -> void:
 	if enemy == null or navigation_component == null:
 		return
@@ -50,6 +65,10 @@ func process_wander(delta: float) -> void:
 		enemy.movement_component.decelerate_to_stop(delta)
 		if state_time_remaining <= 0.0:
 			_start_wander_phase()
+		return
+
+	if current_mode == MODE_RETURN:
+		_process_return_to_origin()
 		return
 
 	if not has_wander_target:
@@ -68,22 +87,49 @@ func process_wander(delta: float) -> void:
 		enemy.patrol_slow_radius
 	)
 
-func _follow_target(speed_scale: float, target_position: Vector2, arrival_radius: float, slow_radius: float) -> void:
+func _follow_target(speed_scale: float, target_position: Vector2, arrival_radius: float, slow_radius: float, target_mode: StringName = MODE_WANDER) -> void:
 	wander_target = target_position
-	current_mode = MODE_WANDER
+	current_mode = target_mode
+
+	var interest_weight := enemy.steering_patrol_interest_scale
+	var danger_weight := enemy.steering_patrol_danger_scale
+	if target_mode == MODE_RETURN:
+		interest_weight = enemy.steering_return_interest_scale
+		danger_weight = enemy.steering_return_danger_scale
+
 	navigation_component._set_navigation_target(target_position)
 	navigation_component._follow_navigation(speed_scale, {
-		"mode": String(MODE_WANDER),
+		"mode": String(target_mode),
 		"fallback_target": target_position,
 		"interest_position": target_position,
 		"arrival_radius": arrival_radius,
 		"slow_radius": slow_radius,
 		"commit_strength": enemy.steering_commitment_strength,
+		"interest_weight": interest_weight,
+		"danger_weight": danger_weight,
 		"target_is_active": true
 	})
 
+
+func _process_return_to_origin() -> void:
+	var home_position := _get_home_position()
+	wander_target = home_position
+	var distance_to_home := enemy.global_position.distance_to(home_position)
+	if distance_to_home <= enemy.patrol_arrival_radius:
+		reset()
+		return
+
+	_follow_target(
+		enemy.return_move_speed_scale,
+		home_position,
+		enemy.patrol_arrival_radius,
+		enemy.patrol_slow_radius,
+		MODE_RETURN
+	)
+
 func _start_idle_phase() -> void:
 	has_wander_target = false
+	wander_target = enemy.global_position if enemy != null else wander_target
 	current_mode = MODE_IDLE
 	state_time_remaining = enemy.rng.randf_range(enemy.patrol_idle_time.x, enemy.patrol_idle_time.y)
 	if navigation_component != null:
@@ -97,6 +143,13 @@ func _start_wander_phase() -> void:
 	has_wander_target = true
 	current_mode = MODE_WANDER
 	state_time_remaining = enemy.rng.randf_range(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
+	_follow_target(
+		enemy.patrol_move_speed_scale,
+		wander_target,
+		enemy.patrol_arrival_radius,
+		enemy.patrol_slow_radius,
+		MODE_WANDER
+	)
 
 func _pick_next_wander_target() -> bool:
 	if enemy == null or navigation_component == null:
@@ -110,12 +163,21 @@ func _pick_next_wander_target() -> bool:
 		var distance := enemy.rng.randf_range(min_distance, enemy.patrol_radius)
 		var angle := enemy.rng.randf_range(0.0, TAU)
 		var raw_candidate := home_position + Vector2.RIGHT.rotated(angle) * distance
-		var navigable_candidate := navigation_component._get_closest_navigation_point(raw_candidate)
-		if navigable_candidate.distance_to(home_position) > enemy.patrol_radius:
+		var patrol_candidate := raw_candidate
+
+		if navigation_component._has_navigation_map():
+			var snapped_candidate := navigation_component._get_closest_navigation_point(raw_candidate)
+			var snapped_is_usable := snapped_candidate.distance_to(home_position) <= enemy.patrol_radius
+			snapped_is_usable = snapped_is_usable and snapped_candidate.distance_to(enemy.global_position) >= min_distance
+			if snapped_is_usable:
+				patrol_candidate = snapped_candidate
+
+		if patrol_candidate.distance_to(home_position) > enemy.patrol_radius:
 			continue
-		if navigable_candidate.distance_to(enemy.global_position) < min_distance:
+		if patrol_candidate.distance_to(enemy.global_position) < min_distance:
 			continue
-		wander_target = navigable_candidate
+
+		wander_target = patrol_candidate
 		return true
 
 	return false
