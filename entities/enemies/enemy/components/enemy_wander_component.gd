@@ -8,6 +8,7 @@ var enemy: Enemy
 var navigation_component: EnemyNavigationComponent
 
 var wander_origin: Vector2 = Vector2.ZERO
+var wander_origin_space: Node2D
 var wander_target: Vector2 = Vector2.ZERO
 var has_wander_target: bool = false
 var has_wander_origin: bool = false
@@ -19,21 +20,23 @@ func setup(owner_enemy: Enemy, owner_navigation_component: EnemyNavigationCompon
 	enemy = owner_enemy
 	navigation_component = owner_navigation_component
 	has_wander_origin = false
-	wander_origin = enemy.global_position
+	wander_origin_space = enemy.get_parent() as Node2D
+	wander_origin = enemy.position
 	wander_target = enemy.global_position
 	reset()
 
-func set_wander_origin(origin: Vector2) -> void:
+func set_wander_origin(origin: Vector2, origin_space: Node2D = null) -> void:
 	wander_origin = origin
+	wander_origin_space = origin_space
 	has_wander_origin = true
 	if not has_wander_target:
-		wander_target = wander_origin
+		wander_target = _get_home_position()
 
 func reset() -> void:
 	has_wander_target = false
 	wander_target = enemy.global_position if enemy != null else Vector2.ZERO
 	if has_wander_origin:
-		wander_target = wander_origin
+		wander_target = _get_home_position()
 	wait_time_remaining = 0.0
 	repick_time_remaining = 0.0
 	current_mode = MODE_WANDER
@@ -181,6 +184,8 @@ func _pick_next_wander_target() -> void:
 
 func _get_home_position() -> Vector2:
 	if has_wander_origin:
+		if wander_origin_space != null and is_instance_valid(wander_origin_space):
+			return wander_origin_space.to_global(wander_origin)
 		return wander_origin
 	if enemy != null:
 		return enemy.global_position
