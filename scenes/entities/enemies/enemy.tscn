@@ -5,9 +5,25 @@
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://scenes/effects/death.tscn" id="2_pm80n"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://scenes/components/health_component.gd" id="3_h9w2a"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://scenes/components/stats_component.gd" id="4_f7l2p"]
+[ext_resource type="Script" path="res://scenes/components/stat.gd" id="5_stat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
+
+[sub_resource type="Resource" id="Resource_enemy_max_health"]
+script = ExtResource("5_stat")
+id = &"max_health"
+value = 180.0
+
+[sub_resource type="Resource" id="Resource_enemy_attack"]
+script = ExtResource("5_stat")
+id = &"attack"
+value = 24.0
+
+[sub_resource type="Resource" id="Resource_enemy_defense"]
+script = ExtResource("5_stat")
+id = &"defense"
+value = 8.0
 
 [sub_resource type="Animation" id="Animation_1hmtu"]
 length = 0.001
@@ -193,10 +209,10 @@ death_packed = ExtResource("2_pm80n")
 
 [node name="StatsComponent" type="Node" parent="."]
 script = ExtResource("4_f7l2p")
+stats = [SubResource("Resource_enemy_max_health"), SubResource("Resource_enemy_attack"), SubResource("Resource_enemy_defense")]
 
 [node name="HealthComponent" type="Node" parent="StatsComponent"]
 script = ExtResource("3_h9w2a")
-max_health = 180
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)

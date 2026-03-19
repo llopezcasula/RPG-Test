@@ -2,6 +2,11 @@ extends Node
 class_name MovementComponent
 
 @export_category("Movement")
+# These ids let the component read movement tuning from StatsComponent.
+# If a stat is missing, the fallback value is used instead.
+@export var move_speed_stat_id: StringName = &"move_speed"
+@export var acceleration_stat_id: StringName = &"acceleration"
+@export var deceleration_stat_id: StringName = &"deceleration"
 @export var speed: float = 260.0
 @export var acceleration: float = 1800.0
 @export var deceleration: float = 2200.0
@@ -11,10 +16,12 @@ class_name MovementComponent
 @export var up_action: StringName = &"up"
 @export var down_action: StringName = &"down"
 @export_node_path("CharacterBody2D") var body_path: NodePath
+@export_node_path("StatsComponent") var stats_component_path: NodePath = ^"../StatsComponent"
 
 var move_direction: Vector2 = Vector2.ZERO
 
 @onready var body: CharacterBody2D = _resolve_body()
+@onready var stats_component: StatsComponent = _resolve_stats_component()
 
 func _ready() -> void:
 	if body == null:
@@ -27,8 +34,12 @@ func physics_update(delta: float) -> void:
 	if use_input_actions:
 		move_direction = Input.get_vector(left_action, right_action, up_action, down_action)
 
-	var target_velocity: Vector2 = move_direction * speed
-	var rate: float = acceleration if move_direction != Vector2.ZERO else deceleration
+	var move_speed := _get_stat_value(move_speed_stat_id, speed)
+	var move_acceleration := _get_stat_value(acceleration_stat_id, acceleration)
+	var move_deceleration := _get_stat_value(deceleration_stat_id, deceleration)
+
+	var target_velocity: Vector2 = move_direction * move_speed
+	var rate: float = move_acceleration if move_direction != Vector2.ZERO else move_deceleration
 	body.velocity = body.velocity.move_toward(target_velocity, rate * delta)
 	body.move_and_slide()
 
@@ -40,7 +51,8 @@ func decelerate_to_stop(delta: float) -> void:
 		return
 
 	move_direction = Vector2.ZERO
-	body.velocity = body.velocity.move_toward(Vector2.ZERO, deceleration * delta)
+	var move_deceleration := _get_stat_value(deceleration_stat_id, deceleration)
+	body.velocity = body.velocity.move_toward(Vector2.ZERO, move_deceleration * delta)
 	body.move_and_slide()
 
 	if body.velocity.length_squared() < 1.0:
@@ -61,3 +73,13 @@ func _resolve_body() -> CharacterBody2D:
 	if body_path != NodePath():
 		return get_node_or_null(body_path) as CharacterBody2D
 	return get_parent() as CharacterBody2D
+
+func _resolve_stats_component() -> StatsComponent:
+	if stats_component_path != NodePath():
+		return get_node_or_null(stats_component_path) as StatsComponent
+	return get_node_or_null("../StatsComponent") as StatsComponent
+
+func _get_stat_value(stat_id: StringName, fallback_value: float) -> float:
+	if stats_component == null:
+		return fallback_value
+	return stats_component.get_stat_value(stat_id, fallback_value)

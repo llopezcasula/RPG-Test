@@ -1,34 +1,89 @@
 extends Node
 class_name StatsComponent
 
-@export_node_path("HealthComponent") var health_component_path: NodePath = ^"HealthComponent"
+signal stat_added(stat_id: StringName, value: float)
+signal stat_changed(stat_id: StringName, value: float)
+signal stat_removed(stat_id: StringName)
 
-var stat_components: Dictionary[StringName, Node] = {}
+# Centralized stat storage for an entity.
+# Store only the simple numeric values an entity actually needs.
+@export var stats: Array[Stat] = []
 
-@onready var health_component: HealthComponent = _resolve_health_component()
+var _stats_by_id: Dictionary[StringName, Stat] = {}
 
-func _ready() -> void:
-	if health_component != null:
-		register_stat_component(&"health", health_component)
-	else:
-		push_warning("StatsComponent requires a HealthComponent child or assigned health_component_path.")
+func _enter_tree() -> void:
+	_rebuild_cache()
 
-func register_stat_component(stat_name: StringName, component: Node) -> void:
-	if component == null:
+func add_stat(stat: Stat, replace_existing: bool = true) -> void:
+	if stat == null:
 		return
 
-	stat_components[stat_name] = component
+	if stat.id == &"":
+		push_warning("Ignoring Stat with an empty id on %s." % get_path())
+		return
 
-func has_stat_component(stat_name: StringName) -> bool:
-	return stat_components.has(stat_name)
+	if has_stat(stat.id):
+		if not replace_existing:
+			return
+		_stats_by_id[stat.id].value = stat.value
+		stat_changed.emit(stat.id, stat.value)
+		return
 
-func get_stat_component(stat_name: StringName) -> Node:
-	return stat_components.get(stat_name)
+	stats.append(stat)
+	_stats_by_id[stat.id] = stat
+	stat_added.emit(stat.id, stat.value)
 
-func get_health_component() -> HealthComponent:
-	return health_component
+func add_stat_value(stat_id: StringName, value: float, replace_existing: bool = true) -> void:
+	add_stat(Stat.create(stat_id, value), replace_existing)
 
-func _resolve_health_component() -> HealthComponent:
-	if health_component_path != NodePath():
-		return get_node_or_null(health_component_path) as HealthComponent
-	return get_node_or_null("HealthComponent") as HealthComponent
+func has_stat(stat_id: StringName) -> bool:
+	return _stats_by_id.has(stat_id)
+
+func get_stat(stat_id: StringName) -> Stat:
+	return _stats_by_id.get(stat_id)
+
+func get_stat_value(stat_id: StringName, default_value: float = 0.0) -> float:
+	var stat := get_stat(stat_id)
+	if stat == null:
+		return default_value
+	return stat.value
+
+func set_stat_value(stat_id: StringName, value: float) -> void:
+	var stat := get_stat(stat_id)
+	if stat == null:
+		add_stat_value(stat_id, value)
+		return
+
+	if is_equal_approx(stat.value, value):
+		return
+
+	stat.value = value
+	stat_changed.emit(stat_id, value)
+
+func remove_stat(stat_id: StringName) -> void:
+	if not has_stat(stat_id):
+		return
+
+	var stat := _stats_by_id[stat_id]
+	stats.erase(stat)
+	_stats_by_id.erase(stat_id)
+	stat_removed.emit(stat_id)
+
+func get_stat_ids() -> Array:
+	return _stats_by_id.keys()
+
+func _rebuild_cache() -> void:
+	_stats_by_id.clear()
+
+	for stat in stats:
+		if stat == null:
+			continue
+
+		if stat.id == &"":
+			push_warning("Found Stat with an empty id on %s." % get_path())
+			continue
+
+		if _stats_by_id.has(stat.id):
+			push_warning("Duplicate stat id '%s' found on %s. Keeping the last value." % [String(stat.id), get_path()])
+
+		_stats_by_id[stat.id] = stat

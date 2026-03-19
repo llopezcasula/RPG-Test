@@ -5,9 +5,45 @@
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://scenes/components/movement_component.gd" id="3_3yqf4"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://scenes/components/stats_component.gd" id="4_s2m1x"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://scenes/components/health_component.gd" id="5_n4a6r"]
+[ext_resource type="Script" path="res://scenes/components/stat.gd" id="6_stat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
+
+[sub_resource type="Resource" id="Resource_player_max_health"]
+script = ExtResource("6_stat")
+id = &"max_health"
+value = 100.0
+
+[sub_resource type="Resource" id="Resource_player_move_speed"]
+script = ExtResource("6_stat")
+id = &"move_speed"
+value = 260.0
+
+[sub_resource type="Resource" id="Resource_player_acceleration"]
+script = ExtResource("6_stat")
+id = &"acceleration"
+value = 1800.0
+
+[sub_resource type="Resource" id="Resource_player_deceleration"]
+script = ExtResource("6_stat")
+id = &"deceleration"
+value = 2200.0
+
+[sub_resource type="Resource" id="Resource_player_attack_speed"]
+script = ExtResource("6_stat")
+id = &"attack_speed"
+value = 0.6
+
+[sub_resource type="Resource" id="Resource_player_attack"]
+script = ExtResource("6_stat")
+id = &"attack"
+value = 60.0
+
+[sub_resource type="Resource" id="Resource_player_crit_chance"]
+script = ExtResource("6_stat")
+id = &"crit_chance"
+value = 0.15
 
 [sub_resource type="Animation" id="Animation_1hmtu"]
 length = 0.001
@@ -331,6 +367,7 @@ script = ExtResource("1_635qg")
 
 [node name="StatsComponent" type="Node" parent="."]
 script = ExtResource("4_s2m1x")
+stats = [SubResource("Resource_player_max_health"), SubResource("Resource_player_move_speed"), SubResource("Resource_player_acceleration"), SubResource("Resource_player_deceleration"), SubResource("Resource_player_attack_speed"), SubResource("Resource_player_attack"), SubResource("Resource_player_crit_chance")]
 
 [node name="HealthComponent" type="Node" parent="StatsComponent"]
 script = ExtResource("5_n4a6r")
