@@ -4,10 +4,13 @@
 [ext_resource type="Texture2D" uid="uid://ylse6gpvtwpm" path="res://assets/sprites/enemies/Warrior_Red.png" id="2_c8ylr"]
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death.tscn" id="2_pm80n"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://systems/stats/components/health_component.gd" id="3_h9w2a"]
+[ext_resource type="Script" path="res://entities/enemies/enemy/enemy_ai_component.gd" id="3_ai"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://systems/stats/components/stats_component.gd" id="4_f7l2p"]
 [ext_resource type="Resource" uid="uid://2sq3niu7s04y" path="res://data/stats/default_enemy_stats.tres" id="5_stats"]
 [ext_resource type="Script" uid="uid://d3e3a4g1vqg3s" path="res://systems/stats/components/combat_component.gd" id="6_combat"]
 [ext_resource type="Script" uid="uid://dauorll13gf7e" path="res://systems/stats/components/buff_component.gd" id="7_buff"]
+[ext_resource type="Script" path="res://entities/enemies/enemy/enemy_navigation_component.gd" id="7_nav"]
+[ext_resource type="Script" path="res://entities/enemies/enemy/enemy_attack_component.gd" id="7_attack"]
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://systems/stats/components/movement_component.gd" id="8_move"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
@@ -356,6 +359,15 @@ acceleration = 900.0
 deceleration = 1400.0
 
 [node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=1265874122]
+
+[node name="EnemyAIComponent" type="Node" parent="."]
+script = ExtResource("3_ai")
+
+[node name="EnemyNavigationComponent" type="Node" parent="."]
+script = ExtResource("7_nav")
+
+[node name="EnemyAttackComponent" type="Node" parent="."]
+script = ExtResource("7_attack")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)
