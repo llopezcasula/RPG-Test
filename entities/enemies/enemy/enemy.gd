@@ -30,6 +30,10 @@ var attack_cooldown_remaining: float = 0.0
 var aggro_locked: bool = false
 var current_target: CharacterBody2D
 var rng := RandomNumberGenerator.new()
+var attack_hit_targets: Array[Node] = []
+var hitbox_base_position: Vector2
+var hitbox_base_rotation: float
+var hitbox_base_scale: Vector2
 
 @onready var stats_component: StatsComponent = $StatsComponent
 @onready var movement_component: MovementComponent = $MovementComponent
@@ -37,6 +41,8 @@ var rng := RandomNumberGenerator.new()
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var hit_box: Area2D = $HitBox
+@onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
@@ -45,6 +51,10 @@ func _ready() -> void:
 	rng.randomize()
 	spawn_position = global_position
 	patrol_target = spawn_position
+	hitbox_base_position = hit_box.position
+	hitbox_base_rotation = hit_box.rotation
+	hitbox_base_scale = hit_box.scale
+	set_attack_hitbox_enabled(false)
 	update_animation()
 	_resolve_target()
 
@@ -172,7 +182,11 @@ func _resolve_target() -> void:
 
 func _start_attack(direction: Vector2) -> void:
 	state = State.ATTACK
+	attack_hit_targets.clear()
 	_update_facing(direction)
+	hit_box.position = hitbox_base_position
+	hit_box.rotation = hitbox_base_rotation
+	hit_box.scale = hitbox_base_scale
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", facing_direction)
 	update_animation()
 	attack_cooldown_remaining = combat_component.get_attack_speed() if combat_component != null else 0.6
@@ -183,11 +197,11 @@ func _perform_attack_after_windup() -> void:
 	var windup := maxf(attack_duration * attack_windup_ratio, 0.01)
 	await get_tree().create_timer(windup).timeout
 
-	if state == State.DEAD or state != State.ATTACK or current_target == null or not is_instance_valid(current_target):
+	if state == State.DEAD or state != State.ATTACK:
 		return
 
-	if global_position.distance_to(current_target.global_position) <= attack_range + 8.0 and combat_component != null:
-		combat_component.attack_target(current_target)
+	set_attack_hitbox_enabled(true)
+	_resolve_attack_hit_overlaps()
 
 	var recovery := maxf(attack_duration - windup, 0.0)
 	if recovery > 0.0:
@@ -196,8 +210,28 @@ func _perform_attack_after_windup() -> void:
 	if state == State.DEAD:
 		return
 
+	set_attack_hitbox_enabled(false)
+	hit_box.position = hitbox_base_position
+	hit_box.rotation = hitbox_base_rotation
+	hit_box.scale = hitbox_base_scale
+	attack_hit_targets.clear()
 	state = State.IDLE
 	update_animation()
+
+func _resolve_attack_hit_overlaps() -> void:
+	for body in hit_box.get_overlapping_bodies():
+		_try_attack_target(body)
+
+func _try_attack_target(target: Node) -> void:
+	if combat_component == null or target == null:
+		return
+	if attack_hit_targets.has(target):
+		return
+	if not (target is CharacterBody2D):
+		return
+
+	attack_hit_targets.append(target)
+	combat_component.attack_target(target)
 
 func _update_facing(direction: Vector2) -> void:
 	if direction == Vector2.ZERO:
@@ -232,8 +266,17 @@ func update_animation() -> void:
 		State.ATTACK:
 			animation_playback.travel("attack")
 
+func set_attack_hitbox_enabled(enabled: bool) -> void:
+	hit_box.monitoring = enabled
+	hit_box.monitorable = false
+	hit_box_shape.disabled = not enabled
+
 func _on_health_component_died() -> void:
 	state = State.DEAD
 	movement_component.stop_immediately()
+	set_attack_hitbox_enabled(false)
 	velocity = Vector2.ZERO
 	death()
+
+func _on_hit_box_body_entered(body: Node2D) -> void:
+	_try_attack_target(body)
