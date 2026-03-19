@@ -90,19 +90,17 @@ func _start_idle_phase() -> void:
 		navigation_component._stop_navigation()
 
 func _start_wander_phase() -> void:
-	var target := _pick_next_wander_target()
-	if target == null:
+	if not _pick_next_wander_target():
 		_start_idle_phase()
 		return
 
-	wander_target = target
 	has_wander_target = true
 	current_mode = MODE_WANDER
 	state_time_remaining = enemy.rng.randf_range(enemy.patrol_wander_duration.x, enemy.patrol_wander_duration.y)
 
-func _pick_next_wander_target() -> Variant:
+func _pick_next_wander_target() -> bool:
 	if enemy == null or navigation_component == null:
-		return null
+		return false
 
 	var home_position := _get_home_position()
 	var min_distance := minf(enemy.patrol_point_min_distance, enemy.patrol_radius)
@@ -117,9 +115,10 @@ func _pick_next_wander_target() -> Variant:
 			continue
 		if navigable_candidate.distance_to(enemy.global_position) < min_distance:
 			continue
-		return navigable_candidate
+		wander_target = navigable_candidate
+		return true
 
-	return null
+	return false
 
 func _get_home_position() -> Vector2:
 	if has_wander_origin:
