@@ -1,4 +1,5 @@
 extends CharacterBody2D
+class_name Enemy
 
 
 enum State {
@@ -54,7 +55,7 @@ var patrol_wait_time: float = 0.0
 var attack_cooldown_remaining: float = 0.0
 var aggro_locked: bool = false
 var current_target: CharacterBody2D
-var rng := RandomNumberGenerator.new()
+var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 var attack_hit_targets: Array[Node] = []
 var hitbox_base_position: Vector2
 var hitbox_base_rotation: float
@@ -142,9 +143,12 @@ func get_health_component() -> HealthComponent:
 	return health_component
 
 func death() -> void:
-	var death_scene: Node2D = death_packed.instantiate()
+	var death_scene: Node2D = death_packed.instantiate() as Node2D
+	if death_scene == null:
+		queue_free()
+		return
 
-	var effect_parent := %Effects as Node2D
+	var effect_parent: Node2D = %Effects as Node2D
 	if effect_parent == null:
 		effect_parent = get_parent() as Node2D
 

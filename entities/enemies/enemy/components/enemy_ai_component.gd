@@ -1,11 +1,11 @@
 extends Node
 class_name EnemyAIComponent
 
-var enemy
+var enemy: Enemy
 var movement_component: MovementComponent
 var navigation_component: EnemyNavigationComponent
 
-func setup(owner_enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent) -> void:
+func setup(owner_enemy: Enemy, owner_movement_component: MovementComponent, owner_navigation_component: EnemyNavigationComponent) -> void:
 	enemy = owner_enemy
 	movement_component = owner_movement_component
 	navigation_component = owner_navigation_component
@@ -58,7 +58,7 @@ func _process_chase(delta: float) -> void:
 
 	# Navigation stays owned by EnemyNavigationComponent. AI only chooses when to
 	# chase and how aggressively to approach the current target.
-	var desired_speed_scale := 1.0
+	var desired_speed_scale: float = 1.0
 	if enemy.attack_slowdown_distance > 0.0:
 		var slowdown_distance: float = enemy.attack_range + enemy.attack_slowdown_distance
 		if distance_to_target < slowdown_distance:

@@ -1,12 +1,12 @@
 extends Node
 class_name EnemyAttackComponent
 
-var enemy
+var enemy: Enemy
 var combat_component: CombatComponent
 var hit_box: Area2D
 var hit_box_shape: CollisionShape2D
 
-func setup(owner_enemy, owner_combat_component: CombatComponent, owner_hit_box: Area2D, owner_hit_box_shape: CollisionShape2D) -> void:
+func setup(owner_enemy: Enemy, owner_combat_component: CombatComponent, owner_hit_box: Area2D, owner_hit_box_shape: CollisionShape2D) -> void:
 	enemy = owner_enemy
 	combat_component = owner_combat_component
 	hit_box = owner_hit_box
@@ -25,8 +25,8 @@ func _start_attack(direction: Vector2) -> void:
 	_perform_attack_after_windup()
 
 func _perform_attack_after_windup() -> void:
-	var attack_duration := enemy.attack_cooldown_remaining
-	var windup := maxf(attack_duration * enemy.attack_windup_ratio, 0.01)
+	var attack_duration: float = enemy.attack_cooldown_remaining
+	var windup: float = maxf(attack_duration * enemy.attack_windup_ratio, 0.01)
 	await enemy.get_tree().create_timer(windup).timeout
 
 	if enemy.state == enemy.State.DEAD or enemy.state != enemy.State.ATTACK:
@@ -35,7 +35,7 @@ func _perform_attack_after_windup() -> void:
 	set_attack_hitbox_enabled(true)
 	_resolve_attack_hit_overlaps()
 
-	var recovery := maxf(attack_duration - windup, 0.0)
+	var recovery: float = maxf(attack_duration - windup, 0.0)
 	if recovery > 0.0:
 		await enemy.get_tree().create_timer(recovery).timeout
 
