@@ -49,10 +49,14 @@ func _draw() -> void:
 	if steering_component.last_interest_position != Vector2.ZERO:
 		draw_circle(to_local(steering_component.last_interest_position), 4.0, Color.DEEP_SKY_BLUE)
 
-	if wander_component != null:
+	if wander_component != null and wander_component.has_wander_origin:
 		draw_arc(to_local(wander_component.wander_origin), enemy.patrol_radius, 0.0, TAU, 48, Color(0.4, 0.7, 1.0, 0.35), 1.5)
-		if wander_component.has_wander_target:
+		if wander_component.current_mode == EnemyWanderComponent.MODE_RETURN_HOME:
+			draw_arc(to_local(wander_component.wander_origin), enemy.patrol_return_distance, 0.0, TAU, 48, Color(1.0, 0.65, 0.25, 0.22), 1.0)
+		if wander_component.has_wander_target or wander_component.current_mode == EnemyWanderComponent.MODE_RETURN_HOME:
 			var local_target := to_local(wander_component.wander_target)
-			draw_circle(local_target, enemy.patrol_arrival_radius, Color(0.3, 0.9, 1.0, 0.18))
-			draw_arc(local_target, enemy.patrol_slow_radius, 0.0, TAU, 32, Color(1.0, 0.85, 0.35, 0.28), 1.0)
-			draw_line(Vector2.ZERO, local_target, Color(0.3, 0.9, 1.0, 0.55), 1.5)
+			var slow_radius := enemy.patrol_slow_radius if wander_component.current_mode != EnemyWanderComponent.MODE_RETURN_HOME else enemy.patrol_return_slow_radius
+			var target_color := Color(0.3, 0.9, 1.0, 0.55) if wander_component.current_mode != EnemyWanderComponent.MODE_RETURN_HOME else Color(1.0, 0.75, 0.25, 0.65)
+			draw_circle(local_target, enemy.patrol_arrival_radius, Color(target_color.r, target_color.g, target_color.b, 0.18))
+			draw_arc(local_target, slow_radius, 0.0, TAU, 32, Color(target_color.r, target_color.g, target_color.b, 0.28), 1.0)
+			draw_line(Vector2.ZERO, local_target, target_color, 1.5)
