@@ -3,7 +3,8 @@
 [ext_resource type="Script" uid="uid://cg6hrx6jso1xu" path="res://scenes/entities/enemies/enemy.gd" id="1_essrt"]
 [ext_resource type="Texture2D" uid="uid://ylse6gpvtwpm" path="res://assets/sprites/enemies/Warrior_Red.png" id="2_c8ylr"]
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://scenes/effects/death.tscn" id="2_pm80n"]
-[ext_resource type="Script" path="res://scenes/components/health_component.gd" id="3_h9w2a"]
+[ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://scenes/components/health_component.gd" id="3_h9w2a"]
+[ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://scenes/components/stats_component.gd" id="4_f7l2p"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
@@ -190,7 +191,10 @@ transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition
 script = ExtResource("1_essrt")
 death_packed = ExtResource("2_pm80n")
 
-[node name="HealthComponent" type="Node" parent="."]
+[node name="StatsComponent" type="Node" parent="."]
+script = ExtResource("4_f7l2p")
+
+[node name="HealthComponent" type="Node" parent="StatsComponent"]
 script = ExtResource("3_h9w2a")
 max_health = 180
 

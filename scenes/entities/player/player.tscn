@@ -2,7 +2,9 @@
 
 [ext_resource type="Texture2D" uid="uid://dd14yvscw8gcd" path="res://assets/sprites/player/Warrior_Blue.png" id="1_1hmtu"]
 [ext_resource type="Script" uid="uid://b13cah33fnrcn" path="res://scenes/entities/player/player.gd" id="1_635qg"]
-[ext_resource type="Script" path="res://scenes/components/movement_component.gd" id="3_3yqf4"]
+[ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://scenes/components/movement_component.gd" id="3_3yqf4"]
+[ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://scenes/components/stats_component.gd" id="4_s2m1x"]
+[ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://scenes/components/health_component.gd" id="5_n4a6r"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
 radius = 15.0
@@ -326,6 +328,12 @@ size = Vector2(10, 46)
 
 [node name="Player" type="CharacterBody2D" unique_id=2021335828]
 script = ExtResource("1_635qg")
+
+[node name="StatsComponent" type="Node" parent="."]
+script = ExtResource("4_s2m1x")
+
+[node name="HealthComponent" type="Node" parent="StatsComponent"]
+script = ExtResource("5_n4a6r")
 
 [node name="MovementComponent" type="Node" parent="."]
 script = ExtResource("3_3yqf4")

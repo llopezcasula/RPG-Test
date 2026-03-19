@@ -3,17 +3,24 @@ extends CharacterBody2D
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
 
-@onready var health_component: HealthComponent = $HealthComponent
+@onready var stats_component: StatsComponent = $StatsComponent
 
 func _ready() -> void:
+	var health_component := get_health_component()
 	if health_component != null:
 		health_component.died.connect(_on_health_component_died)
 
 func take_damage(damage_taken: int) -> void:
+	var health_component := get_health_component()
 	if health_component == null:
 		return
 
 	health_component.take_damage(damage_taken)
+
+func get_health_component() -> HealthComponent:
+	if stats_component == null:
+		return null
+	return stats_component.get_health_component()
 
 func death() -> void:
 	var death_scene: Node2D = death_packed.instantiate()
