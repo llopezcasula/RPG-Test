@@ -61,11 +61,12 @@ func _process_chase(delta: float) -> void:
 
 	navigation_component._set_navigation_target(enemy.current_target.global_position)
 
-	var desired_speed_scale: float = 1.0
+	var desired_speed_scale: float = enemy.chase_move_speed_scale
 	if enemy.attack_slowdown_distance > 0.0:
 		var slowdown_distance: float = enemy.attack_range + enemy.attack_slowdown_distance
 		if distance_to_target < slowdown_distance:
-			desired_speed_scale = clampf((distance_to_target - enemy.attack_range) / enemy.attack_slowdown_distance, 0.35, 1.0)
+			var attack_slowdown_ratio := clampf((distance_to_target - enemy.attack_range) / enemy.attack_slowdown_distance, 0.35, 1.0)
+			desired_speed_scale *= attack_slowdown_ratio
 
 	navigation_component._follow_navigation(desired_speed_scale, {
 		"mode": "chase",
