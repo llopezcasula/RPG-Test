@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" uid="uid://dd14yvscw8gcd" path="res://assets/sprites/player/Warrior_Blue.png" id="1_1hmtu"]
 [ext_resource type="Script" uid="uid://b13cah33fnrcn" path="res://entities/player/player.gd" id="1_635qg"]
+[ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death.tscn" id="2_pm80n"]
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://systems/stats/components/movement_component.gd" id="3_3yqf4"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://systems/stats/components/stats_component.gd" id="4_s2m1x"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://systems/stats/components/health_component.gd" id="5_n4a6r"]
@@ -331,6 +332,7 @@ size = Vector2(10, 46)
 
 [node name="Player" type="CharacterBody2D" unique_id=2021335828]
 script = ExtResource("1_635qg")
+death_packed = ExtResource("2_pm80n")
 
 [node name="StatsComponent" type="Node" parent="." unique_id=47555465]
 script = ExtResource("4_s2m1x")

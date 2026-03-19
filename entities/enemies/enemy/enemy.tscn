@@ -267,7 +267,7 @@ _data = {
 animation = &"attack_right"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_1murt"]
-animation = &"attack_right"
+animation = &"attack_left"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_5sj0x"]
 animation = &"attack_up"
@@ -391,7 +391,15 @@ shape = SubResource("CapsuleShape2D_pm80n")
 
 [node name="HitBox" type="Area2D" parent="." unique_id=1213898500]
 position = Vector2(29, -50)
+collision_layer = 32
+collision_mask = 1
+input_pickable = false
+monitoring = false
+monitorable = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox" unique_id=1930442479]
 position = Vector2(0, -19)
+disabled = true
 shape = SubResource("RectangleShape2D_136nj")
+
+[connection signal="body_entered" from="HitBox" to="." method="_on_hit_box_body_entered"]
