@@ -72,19 +72,28 @@ func _process_patrol(delta: float) -> void:
 		movement_component.decelerate_to_stop(delta)
 		return
 
-	if enemy.global_position.distance_to(enemy.patrol_target) <= enemy.patrol_repath_distance:
-		navigation_component._stop_navigation()
+	navigation_component._stop_navigation()
+
+	if enemy.global_position.distance_to(enemy.patrol_target) <= enemy.patrol_arrival_distance:
 		enemy.patrol_wait_time -= delta
 		if enemy.patrol_wait_time <= 0.0:
 			_pick_next_patrol_target()
+		else:
+			movement_component.decelerate_to_stop(delta)
+			enemy._clear_patrol_debug()
 		return
 
-	navigation_component._set_navigation_target(enemy.patrol_target)
-	navigation_component._follow_navigation()
+	var patrol_direction: Vector2 = enemy._compute_patrol_direction()
+	if patrol_direction == Vector2.ZERO:
+		movement_component.decelerate_to_stop(delta)
+		return
+
+	enemy._update_facing(patrol_direction)
+	movement_component.set_move_direction(patrol_direction)
 
 func _pick_next_patrol_target() -> void:
 	var angle: float = enemy.rng.randf_range(0.0, TAU)
-	var distance: float = enemy.rng.randf_range(12.0, enemy.patrol_radius)
+	var distance: float = enemy.rng.randf_range(enemy.patrol_point_min_distance, enemy.patrol_radius)
 	var requested_patrol_target: Vector2 = enemy.spawn_position + Vector2.RIGHT.rotated(angle) * distance
 	enemy.patrol_target = navigation_component._get_closest_navigation_point(requested_patrol_target)
 	if enemy.patrol_target.distance_to(enemy.global_position) <= enemy.patrol_snap_distance:
