@@ -19,6 +19,7 @@ var state: State = State.IDLE
 var move_direction: Vector2 = Vector2.ZERO
 var hitbox_base_position: Vector2
 var hitbox_base_rotation: float
+var hitbox_base_scale: Vector2
 var attack_facing_left: bool = false
 
 @onready var animation_tree: AnimationTree = $AnimationTree
@@ -34,6 +35,7 @@ func _ready() -> void:
 
 	hitbox_base_position = hit_box.position
 	hitbox_base_rotation = hit_box.rotation
+	hitbox_base_scale = hit_box.scale
 
 	set_attack_hitbox_enabled(false)
 	update_animation()
@@ -56,6 +58,10 @@ func _physics_process(delta: float) -> void:
 		return
 
 	movement_loop(delta)
+
+func _process(_delta: float) -> void:
+	if state == State.ATTACK:
+		sync_attack_hitbox_transform()
 
 func movement_loop(delta: float) -> void:
 	move_direction = Input.get_vector("left", "right", "up", "down")
@@ -106,6 +112,7 @@ func attack() -> void:
 	# Reset to base first before the animation applies its current frame.
 	hit_box.position = hitbox_base_position
 	hit_box.rotation = hitbox_base_rotation
+	hit_box.scale = hitbox_base_scale
 
 	if debug_hitbox:
 		print("facing_left: ", attack_facing_left)
@@ -117,6 +124,7 @@ func attack() -> void:
 	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
 	update_animation()
 	sync_attack_hitbox_transform()
+	call_deferred("sync_attack_hitbox_transform")
 
 	await get_tree().create_timer(attack_speed).timeout
 
@@ -124,17 +132,20 @@ func attack() -> void:
 	attack_facing_left = false
 	hit_box.position = hitbox_base_position
 	hit_box.rotation = hitbox_base_rotation
+	hit_box.scale = hitbox_base_scale
 
 	state = State.IDLE
 	update_animation()
 
 
 func sync_attack_hitbox_transform() -> void:
-	if not attack_facing_left:
+	if attack_facing_left:
+		hit_box.position = Vector2(-abs(hit_box.position.x), hit_box.position.y)
+		hit_box.rotation = -abs(hit_box.rotation)
+		hit_box.scale = Vector2(-abs(hitbox_base_scale.x), hitbox_base_scale.y)
 		return
 
-	hit_box.position = Vector2(-abs(hit_box.position.x), hit_box.position.y)
-	hit_box.rotation = -abs(hit_box.rotation)
+	hit_box.scale = hitbox_base_scale
 
 func set_attack_hitbox_enabled(enabled: bool) -> void:
 	hit_box.monitoring = enabled
