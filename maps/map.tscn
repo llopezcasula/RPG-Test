@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://ilaec6fjg6t7" path="res://assets/environment/props/clouds/Clouds_06.png" id="15_ipjqn"]
 [ext_resource type="Texture2D" uid="uid://b6g0obsr8w4y5" path="res://assets/environment/props/clouds/Clouds_07.png" id="16_5lkus"]
 [ext_resource type="Texture2D" uid="uid://deh463gc1k86w" path="res://assets/environment/props/clouds/Clouds_08.png" id="17_og705"]
-[ext_resource type="PackedScene" uid="uid://dovovdd5paa6t" path="res://entities/player/player.tscn" id="19_1bu5d"]
+[ext_resource type="PackedScene" uid="uid://dovovdd5paa6t" path="res://entities/player/warrior/warrior.tscn" id="19_1bu5d"]
 [ext_resource type="Script" uid="uid://bauosr6qi0k7a" path="res://maps/map.gd" id="20_map_script"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_8sm8m"]
