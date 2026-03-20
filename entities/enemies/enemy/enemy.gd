@@ -15,6 +15,7 @@ enum State {
 # AI
 @export_category("AI")
 @export var player_group: StringName = &"player"
+@export var enemy_group: StringName = &"enemy"
 @export var detection_radius: float = 240.0
 @export var disengage_radius: float = 320.0
 
@@ -43,6 +44,7 @@ enum State {
 @export var patrol_slow_radius: float = 36.0
 @export var patrol_wander_duration: Vector2 = Vector2(1.5, 3.0)
 @export_range(0.1, 1.0, 0.05) var patrol_move_speed_scale: float = 0.45
+@export_range(0.1, 1.0, 0.05) var return_move_speed_scale: float = 0.65
 @export var patrol_target_retry_count: int = 8
 
 # Steering
@@ -59,6 +61,17 @@ enum State {
 @export_range(0.0, 1.0, 0.01) var steering_inertia_weight: float = 0.65
 @export var steering_interest_curve: float = 1.6
 @export var steering_commitment_curve: float = 1.4
+@export var steering_enemy_separation_radius: float = 48.0
+@export_range(0.0, 1.0, 0.01) var steering_enemy_separation_strength: float = 0.28
+@export var steering_enemy_separation_curve: float = 1.8
+@export_range(0.0, 1.0, 0.01) var steering_dominant_direction_blend: float = 0.72
+@export_range(0.0, 1.0, 0.01) var steering_neighbor_direction_influence: float = 0.35
+@export_range(0.1, 2.0, 0.05) var steering_patrol_interest_scale: float = 1.35
+@export_range(0.0, 2.0, 0.05) var steering_patrol_danger_scale: float = 0.55
+@export_range(0.1, 2.0, 0.05) var steering_return_interest_scale: float = 1.5
+@export_range(0.0, 2.0, 0.05) var steering_return_danger_scale: float = 0.7
+@export_range(0.1, 2.0, 0.05) var steering_chase_interest_scale: float = 1.1
+@export_range(0.0, 2.0, 0.05) var steering_chase_danger_scale: float = 1.0
 @export_range(1.0, 2.0, 0.05) var chase_move_speed_scale: float = 1.15
 
 # Debug
@@ -109,6 +122,8 @@ func _ready() -> void:
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
 	rng.randomize()
+	if not is_in_group(enemy_group):
+		add_to_group(enemy_group)
 
 	spawn_position = global_position
 	navigation_target_position = spawn_position
