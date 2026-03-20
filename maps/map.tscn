@@ -564,3 +564,6 @@ tile_set = SubResource("TileSet_75gw7")
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=1942650706]
 navigation_polygon = SubResource("NavigationPolygon_7c64p")
+
+[node name="Enemy" parent="." unique_id=1264468329 instance=ExtResource("10_sl3ds")]
+position = Vector2(-328, -166)
