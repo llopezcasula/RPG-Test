@@ -115,7 +115,36 @@ func _compute_danger(context: Dictionary) -> PackedFloat32Array:
 
 		danger[i] = clampf(score, 0.0, 1.0)
 
+	_apply_enemy_separation_danger(danger, context)
 	return danger
+
+func _apply_enemy_separation_danger(danger: PackedFloat32Array, context: Dictionary) -> void:
+	if enemy == null or enemy.get_tree() == null:
+		return
+
+	var separation_radius := maxf(float(context.get("enemy_separation_radius", enemy.steering_enemy_separation_radius)), 0.0)
+	var separation_strength := maxf(float(context.get("enemy_separation_strength", enemy.steering_enemy_separation_strength)), 0.0)
+	if separation_radius <= 0.0 or separation_strength <= 0.0:
+		return
+
+	for node in enemy.get_tree().get_nodes_in_group(enemy.enemy_group):
+		var other_enemy := node as Enemy
+		if other_enemy == null or other_enemy == enemy or not is_instance_valid(other_enemy):
+			continue
+
+		var to_other := other_enemy.global_position - enemy.global_position
+		var distance_to_other := to_other.length()
+		if distance_to_other <= 0.001 or distance_to_other > separation_radius:
+			continue
+
+		var direction_to_other := to_other / distance_to_other
+		var proximity_weight := 1.0 - clampf(distance_to_other / separation_radius, 0.0, 1.0)
+
+		for i in sample_directions.size():
+			var toward_enemy := remap(clampf(sample_directions[i].dot(direction_to_other), -1.0, 1.0), -1.0, 1.0, 0.0, 1.0)
+			toward_enemy = pow(toward_enemy, enemy.steering_enemy_separation_curve)
+			var separation_score := toward_enemy * proximity_weight * separation_strength
+			danger[i] = clampf(danger[i] + separation_score, 0.0, 1.0)
 
 func _combine_weights(interest: PackedFloat32Array, danger: PackedFloat32Array, context: Dictionary) -> PackedFloat32Array:
 	var final_weights := _make_empty_weights()

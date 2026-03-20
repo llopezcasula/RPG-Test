@@ -15,6 +15,7 @@ enum State {
 # AI
 @export_category("AI")
 @export var player_group: StringName = &"player"
+@export var enemy_group: StringName = &"enemy"
 @export var detection_radius: float = 240.0
 @export var disengage_radius: float = 320.0
 
@@ -60,6 +61,9 @@ enum State {
 @export_range(0.0, 1.0, 0.01) var steering_inertia_weight: float = 0.65
 @export var steering_interest_curve: float = 1.6
 @export var steering_commitment_curve: float = 1.4
+@export var steering_enemy_separation_radius: float = 48.0
+@export_range(0.0, 1.0, 0.01) var steering_enemy_separation_strength: float = 0.28
+@export var steering_enemy_separation_curve: float = 1.8
 @export_range(0.0, 1.0, 0.01) var steering_dominant_direction_blend: float = 0.72
 @export_range(0.0, 1.0, 0.01) var steering_neighbor_direction_influence: float = 0.35
 @export_range(0.1, 2.0, 0.05) var steering_patrol_interest_scale: float = 1.35
@@ -118,6 +122,8 @@ func _ready() -> void:
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
 	rng.randomize()
+	if not is_in_group(enemy_group):
+		add_to_group(enemy_group)
 
 	spawn_position = global_position
 	navigation_target_position = spawn_position
