@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://btjpua3xun1bg"]
 
-[ext_resource type="Script" uid="uid://b13cah33fnrcn" path="res://entities/player/warrior/warrior.gd" id="1_xw84j"]
+[ext_resource type="Script" path="res://entities/player/archer/archer.gd" id="1_xw84j"]
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death/death.tscn" id="2_pj4x3"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://systems/stats/components/stats_component.gd" id="3_clei0"]
 [ext_resource type="Resource" uid="uid://naxd335u5jt3" path="res://data/stats/default_player_stats.tres" id="4_fklug"]
@@ -170,7 +170,7 @@ script = ExtResource("7_8jg38")
 
 [node name="MovementComponent" type="Node" parent="." unique_id=2102088805]
 script = ExtResource("8_0cjns")
-use_input_actions = true
+use_input_actions = false
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=379657036]
 position = Vector2(0, -32)

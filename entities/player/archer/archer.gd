@@ -3,20 +3,18 @@ extends CharacterBody2D
 enum State {
 	IDLE,
 	RUN,
-	ATTACK,
 	DEAD
 }
 
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
 
-@export_category("Combat")
-@export var debug_hitbox: bool = true
+@export_category("Movement")
+@export var arrival_distance: float = 10.0
 
 var state: State = State.IDLE
-var hitbox_base_position: Vector2
-var hitbox_base_rotation: float
-var hitbox_base_scale: Vector2
+var has_move_target: bool = false
+var move_target: Vector2 = Vector2.ZERO
 
 @onready var stats_component: StatsComponent = $StatsComponent
 @onready var movement_component: MovementComponent = $MovementComponent
@@ -25,50 +23,51 @@ var hitbox_base_scale: Vector2
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
-@onready var hit_box: Area2D = $HitBox
-@onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
 
 func _ready() -> void:
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	add_to_group("player")
 	wall_min_slide_angle = deg_to_rad(5.0)
 	animation_tree.active = true
-
-	hitbox_base_position = hit_box.position
-	hitbox_base_rotation = hit_box.rotation
-	hitbox_base_scale = hit_box.scale
-
-	set_attack_hitbox_enabled(false)
+	movement_component.use_input_actions = false
 	update_animation()
 
 	var health_component := get_health_component()
 	if health_component != null:
 		health_component.died.connect(_on_health_component_died)
 
-	if debug_hitbox:
-		print("base hitbox position: ", hitbox_base_position)
-		print("base hitbox rotation: ", rad_to_deg(hitbox_base_rotation))
-		print("shape local position: ", hit_box_shape.position)
-		print("shape local rotation: ", rad_to_deg(hit_box_shape.rotation))
-
-func _unhandled_input(event: InputEvent) -> void:
-	if state == State.DEAD:
-		return
-
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		attack()
-
 func _physics_process(delta: float) -> void:
 	if state == State.DEAD:
 		movement_component.stop_immediately()
 		return
 
-	if state == State.ATTACK:
-		movement_component.decelerate_to_stop(delta)
-		return
-
+	_update_move_target()
 	movement_component.physics_update(delta)
 	update_movement_state()
+
+func set_move_target(world_position: Vector2) -> void:
+	if state == State.DEAD:
+		return
+
+	move_target = world_position
+	has_move_target = true
+
+func clear_move_target() -> void:
+	has_move_target = false
+	movement_component.stop_immediately()
+
+func _update_move_target() -> void:
+	if not has_move_target:
+		movement_component.set_move_direction(Vector2.ZERO)
+		return
+
+	var to_target: Vector2 = move_target - global_position
+	if to_target.length() <= arrival_distance:
+		has_move_target = false
+		movement_component.stop_immediately()
+		return
+
+	movement_component.set_move_direction(to_target.normalized())
 
 func update_movement_state() -> void:
 	var move_direction: Vector2 = movement_component.get_move_direction()
@@ -95,46 +94,6 @@ func update_animation() -> void:
 			animation_playback.travel("idle")
 		State.RUN:
 			animation_playback.travel("run")
-		State.ATTACK:
-			animation_playback.travel("attack")
-
-func attack() -> void:
-	if state == State.ATTACK or state == State.DEAD:
-		return
-
-	state = State.ATTACK
-	set_attack_hitbox_enabled(true)
-
-	var mouse_pos: Vector2 = get_global_mouse_position()
-	var attack_dir: Vector2 = (mouse_pos - global_position).normalized()
-
-	sprite.flip_h = attack_dir.x < 0 and abs(attack_dir.x) >= abs(attack_dir.y)
-
-	hit_box.position = hitbox_base_position
-	hit_box.rotation = hitbox_base_rotation
-	hit_box.scale = hitbox_base_scale
-
-	if debug_hitbox:
-		print("attack_dir: ", attack_dir)
-		print("hitbox local position: ", hit_box.position)
-		print("hitbox global position: ", hit_box.global_position)
-		print("hitbox rotation deg: ", rad_to_deg(hit_box.rotation))
-
-	animation_tree.set("parameters/attack/BlendSpace2D/blend_position", attack_dir)
-	update_animation()
-
-	await get_tree().create_timer(get_attack_speed()).timeout
-
-	if state == State.DEAD:
-		return
-
-	set_attack_hitbox_enabled(false)
-	hit_box.position = hitbox_base_position
-	hit_box.rotation = hitbox_base_rotation
-	hit_box.scale = hitbox_base_scale
-
-	state = State.IDLE
-	update_animation()
 
 func take_damage(damage_taken: float, source: Node = null) -> float:
 	if combat_component != null:
@@ -164,26 +123,11 @@ func death() -> void:
 		effect_parent.add_child(death_scene)
 		death_scene.global_position = global_position
 
-func get_attack_speed() -> float:
-	if combat_component == null:
-		return 0.6
-	return combat_component.get_attack_speed()
-
-func set_attack_hitbox_enabled(enabled: bool) -> void:
-	hit_box.monitoring = enabled
-	hit_box_shape.disabled = not enabled
-
 func _on_health_component_died() -> void:
 	state = State.DEAD
+	has_move_target = false
 	movement_component.stop_immediately()
-	set_attack_hitbox_enabled(false)
 	velocity = Vector2.ZERO
 	collision_shape.disabled = true
 	sprite.visible = false
 	death()
-
-func _on_hit_box_area_entered(area: Area2D) -> void:
-	if combat_component == null:
-		return
-	if area.owner != null:
-		combat_component.attack_target(area.owner)
