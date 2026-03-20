@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://cg6hrx6jso1xu" path="res://entities/enemies/enemy/enemy.gd" id="1_essrt"]
 [ext_resource type="Texture2D" uid="uid://ylse6gpvtwpm" path="res://assets/sprites/enemies/Warrior_Red.png" id="2_c8ylr"]
 [ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death/death.tscn" id="2_pm80n"]
+[ext_resource type="PackedScene" uid="uid://bbp7jv6iiaa8k" path="res://resources/effects/spawn/spawn.tscn" id="3_spawn"]
 [ext_resource type="Script" uid="uid://bd5q8ewkyxu8m" path="res://entities/enemies/enemy/components/enemy_ai_component.gd" id="3_ai"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://systems/stats/components/health_component.gd" id="3_h9w2a"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://systems/stats/components/stats_component.gd" id="4_f7l2p"]
@@ -341,6 +342,7 @@ size = Vector2(9, 38)
 [node name="Enemy" type="CharacterBody2D" unique_id=2021335828]
 script = ExtResource("1_essrt")
 death_packed = ExtResource("2_pm80n")
+spawn_packed = ExtResource("3_spawn")
 
 [node name="StatsComponent" type="Node" parent="." unique_id=1182457180]
 script = ExtResource("4_f7l2p")

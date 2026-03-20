@@ -11,6 +11,7 @@ enum State {
 
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
+@export var spawn_packed: PackedScene
 
 # AI
 @export_category("AI")
@@ -127,6 +128,7 @@ func _ready() -> void:
 
 	spawn_position = global_position
 	navigation_target_position = spawn_position
+	play_spawn_effect()
 
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
@@ -201,6 +203,25 @@ func death() -> void:
 		death_scene.global_position = global_position
 
 	queue_free()
+
+func play_spawn_effect() -> void:
+	if spawn_packed == null:
+		return
+
+	var spawn_scene: Node2D = spawn_packed.instantiate() as Node2D
+	if spawn_scene == null:
+		return
+
+	var effect_parent: Node2D = %Effects as Node2D
+	if effect_parent == null:
+		effect_parent = get_parent() as Node2D
+
+	if effect_parent == null:
+		spawn_scene.queue_free()
+		return
+
+	effect_parent.add_child(spawn_scene)
+	spawn_scene.global_position = global_position
 
 func _clear_navigation_motion() -> void:
 	movement_component.set_move_direction(Vector2.ZERO)
