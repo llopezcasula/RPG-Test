@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cg6hrx6jso1xu" path="res://entities/enemies/enemy/enemy.gd" id="1_essrt"]
 [ext_resource type="Texture2D" uid="uid://ylse6gpvtwpm" path="res://assets/sprites/enemies/Warrior_Red.png" id="2_c8ylr"]
-[ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death.tscn" id="2_pm80n"]
+[ext_resource type="PackedScene" uid="uid://bvof1ssaxns5e" path="res://resources/effects/death/death.tscn" id="2_pm80n"]
 [ext_resource type="Script" uid="uid://bd5q8ewkyxu8m" path="res://entities/enemies/enemy/components/enemy_ai_component.gd" id="3_ai"]
 [ext_resource type="Script" uid="uid://cjq1h1v2wkb84" path="res://systems/stats/components/health_component.gd" id="3_h9w2a"]
 [ext_resource type="Script" uid="uid://do6m1bkr4n8pu" path="res://systems/stats/components/stats_component.gd" id="4_f7l2p"]
@@ -10,10 +10,10 @@
 [ext_resource type="Script" uid="uid://d3e3a4g1vqg3s" path="res://systems/stats/components/combat_component.gd" id="6_combat"]
 [ext_resource type="Script" uid="uid://djpqqtyvm1fkg" path="res://entities/enemies/enemy/components/enemy_attack_component.gd" id="7_attack"]
 [ext_resource type="Script" uid="uid://dauorll13gf7e" path="res://systems/stats/components/buff_component.gd" id="7_buff"]
+[ext_resource type="Script" uid="uid://ct4u4tex1lhee" path="res://entities/enemies/enemy/components/enemy_steering_debug.gd" id="7_debug"]
 [ext_resource type="Script" uid="uid://dvye63nnp3bta" path="res://entities/enemies/enemy/components/enemy_navigation_component.gd" id="7_nav"]
-[ext_resource type="Script" path="res://entities/enemies/enemy/components/enemy_steering_component.gd" id="7_steer"]
-[ext_resource type="Script" path="res://entities/enemies/enemy/components/enemy_steering_debug.gd" id="7_debug"]
-[ext_resource type="Script" path="res://entities/enemies/enemy/components/enemy_wander_component.gd" id="7_wander"]
+[ext_resource type="Script" uid="uid://c5ee8nc2cstwb" path="res://entities/enemies/enemy/components/enemy_steering_component.gd" id="7_steer"]
+[ext_resource type="Script" uid="uid://c4oqim64n856r" path="res://entities/enemies/enemy/components/enemy_wander_component.gd" id="7_wander"]
 [ext_resource type="Script" uid="uid://cvq7mpb5v6tyu" path="res://systems/stats/components/movement_component.gd" id="8_move"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_635qg"]
@@ -376,8 +376,8 @@ script = ExtResource("7_steer")
 script = ExtResource("7_wander")
 
 [node name="EnemySteeringDebug" type="Node2D" parent="." unique_id=189567233]
-script = ExtResource("7_debug")
 z_index = 10
+script = ExtResource("7_debug")
 
 [node name="EnemyAttackComponent" type="Node" parent="." unique_id=1740339843]
 script = ExtResource("7_attack")

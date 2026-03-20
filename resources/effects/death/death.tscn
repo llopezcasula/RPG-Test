@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bvof1ssaxns5e"]
 
-[ext_resource type="Script" uid="uid://d7jmfcxdms5x" path="res://resources/effects/death.gd" id="1_a3gwh"]
+[ext_resource type="Script" uid="uid://d7jmfcxdms5x" path="res://resources/effects/death/death.gd" id="1_a3gwh"]
 [ext_resource type="Texture2D" uid="uid://75hdasi3owsr" path="res://assets/effects/Dead.png" id="1_qfhl6"]
 
 [sub_resource type="Animation" id="Animation_a3gwh"]
