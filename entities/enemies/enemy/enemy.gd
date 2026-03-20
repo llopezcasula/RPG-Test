@@ -11,6 +11,7 @@ enum State {
 
 @export_category("Related Scenes")
 @export var death_packed: PackedScene
+@export var spawn_packed: PackedScene
 
 # AI
 @export_category("AI")
@@ -100,6 +101,7 @@ var navigation_target_position: Vector2
 var navigation_repath_remaining: float = 0.0
 var has_navigation_target: bool = false
 var safe_navigation_velocity: Vector2 = Vector2.ZERO
+var is_spawning: bool = false
 
 @onready var stats_component: StatsComponent = $StatsComponent
 @onready var health_component: HealthComponent = $StatsComponent/HealthComponent
@@ -114,6 +116,9 @@ var safe_navigation_velocity: Vector2 = Vector2.ZERO
 @onready var animation_tree: AnimationTree = $AnimationTree
 @onready var animation_playback: AnimationNodeStateMachinePlayback = animation_tree["parameters/playback"] as AnimationNodeStateMachinePlayback
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
+@onready var hurtbox: Area2D = $Hurtbox
+@onready var hurtbox_shape: CollisionShape2D = $Hurtbox/CollisionShape2D
 @onready var hit_box: Area2D = $HitBox
 @onready var hit_box_shape: CollisionShape2D = $HitBox/CollisionShape2D
 
@@ -127,6 +132,7 @@ func _ready() -> void:
 
 	spawn_position = global_position
 	navigation_target_position = spawn_position
+	is_spawning = true
 
 	steering_component.setup(self)
 	navigation_component.setup(self, movement_component, navigation_agent, steering_component)
@@ -142,11 +148,19 @@ func _ready() -> void:
 	navigation_component._configure_navigation_agent()
 	update_animation()
 	ai_component._resolve_target()
+	_set_spawn_active(false)
 
 	if health_component != null:
 		health_component.died.connect(_on_health_component_died)
 
+	await play_spawn_effect()
+	_finish_spawn()
+
 func _physics_process(delta: float) -> void:
+	if is_spawning:
+		movement_component.stop_immediately()
+		return
+
 	if state == State.DEAD:
 		movement_component.stop_immediately()
 		return
@@ -171,6 +185,9 @@ func _physics_process(delta: float) -> void:
 	_update_state_from_velocity()
 
 func take_damage(damage_taken: float, source: Node = null) -> float:
+	if is_spawning:
+		return 0.0
+
 	if source is CharacterBody2D:
 		current_target = source
 		aggro_locked = true
@@ -201,6 +218,47 @@ func death() -> void:
 		death_scene.global_position = global_position
 
 	queue_free()
+
+func play_spawn_effect() -> Signal:
+	if spawn_packed == null:
+		return get_tree().process_frame
+
+	var spawn_scene: Node2D = spawn_packed.instantiate() as Node2D
+	if spawn_scene == null:
+		return get_tree().process_frame
+
+	var effect_parent: Node2D = %Effects as Node2D
+	if effect_parent == null:
+		effect_parent = get_parent() as Node2D
+
+	if effect_parent == null:
+		spawn_scene.queue_free()
+		return get_tree().process_frame
+
+	effect_parent.add_child(spawn_scene)
+	spawn_scene.global_position = global_position
+	return spawn_scene.spawn_finished
+
+func _set_spawn_active(active: bool) -> void:
+	sprite.visible = active
+	collision_shape.disabled = not active
+	hurtbox.monitoring = active
+	hurtbox.monitorable = active
+	hurtbox_shape.disabled = not active
+	hit_box.monitoring = active
+	hit_box.monitorable = active
+	hit_box_shape.disabled = not active
+	if not active:
+		_clear_navigation_motion()
+		velocity = Vector2.ZERO
+
+func _finish_spawn() -> void:
+	if state == State.DEAD:
+		return
+
+	is_spawning = false
+	_set_spawn_active(true)
+	update_animation()
 
 func _clear_navigation_motion() -> void:
 	movement_component.set_move_direction(Vector2.ZERO)
